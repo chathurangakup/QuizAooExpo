@@ -1,38 +1,37 @@
 import axios from "axios";
+import { getToken } from "../utils/storage";
 
-const API_BASE_URL = "http://localhost:4000/api/";
-
-export const api = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: 10000,
+const api = axios.create({
+  baseURL: "http://192.168.1.112:4000/api",
   headers: {
-    "Content-Type": "application/json",
+    "Content-Type": "application/json", // ✅ ensures JSON requests
   },
+  timeout: 10000, // optional, recommended
 });
 
-// Request interceptor
+// 🔐 Request interceptor: attach token
 api.interceptors.request.use(
-  (config) => {
-    // Add auth token here if needed
-    // const token = await SecureStore.getItemAsync('token');
-    // if (token) {
-    //   config.headers.Authorization = `Bearer ${token}`;
-    // }
+  async (config) => {
+    const token = await getToken();
+    console.log("Attaching token to request:", token);
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Response interceptor
+// 🚫 Response interceptor: handle errors globally
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Handle unauthorized
-      // router.replace('/(public)/login');
+      console.log("Unauthorized - 401: token invalid or expired");
+      // Optional: redirect to login or clear token
     }
     return Promise.reject(error);
   }
 );
+
+export default api;

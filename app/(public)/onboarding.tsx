@@ -1,4 +1,5 @@
 import PrimaryButton from "@/components/common/PrimaryButton";
+import { images } from "@/constants/images";
 import { router } from "expo-router";
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 
@@ -25,8 +26,9 @@ export default function OnboardingScreen() {
     <ScrollView style={styles.container}>
       <View style={styles.content}>
         <Image
-          source={{ uri: "https://via.placeholder.com/300x200" }}
+          source={images.searchBot}
           style={styles.illustration}
+          resizeMode="contain"
         />
 
         <Text style={styles.title}>Welcome to TaskEarn</Text>
@@ -54,6 +56,7 @@ export default function OnboardingScreen() {
           <PrimaryButton
             title="Get Started"
             onPress={() => router.push("/(public)/register")}
+            variant="secondary"
           />
           <PrimaryButton
             title="I have an account"
@@ -81,6 +84,7 @@ const styles = StyleSheet.create({
     height: 200,
     borderRadius: 12,
     marginBottom: 32,
+    marginTop: 36,
   },
   title: {
     fontSize: 28,

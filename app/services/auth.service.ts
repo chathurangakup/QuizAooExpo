@@ -9,37 +9,18 @@ export interface RegisterData {
   name: string;
   email: string;
   phone: string;
+  country: string;
   password: string;
 }
 
 export const authService = {
   login: async (credentials: LoginCredentials) => {
     return api.post("/auth/login", credentials);
-
-    // Real implementation:
-    // return api.post('/auth/login', credentials);
   },
 
-  register: async (data: RegisterData) => {
-    // Mock API call
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          data: {
-            user: {
-              id: "1",
-              name: data.name,
-              email: data.email,
-              phone: data.phone,
-            },
-            token: "mock-jwt-token",
-          },
-        });
-      }, 1000);
-    });
-
+  register: async (credentials: RegisterData) => {
     // Real implementation:
-    // return api.post('/auth/register', data);
+    return api.post("/auth/register", credentials);
   },
 
   logout: async () => {
