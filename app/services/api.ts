@@ -1,19 +1,19 @@
+// services/api.ts
 import axios from "axios";
 import { getToken } from "../utils/storage";
 
 const api = axios.create({
   baseURL: "http://192.168.1.112:4000/api",
+  timeout: 10000,
   headers: {
-    "Content-Type": "application/json", // ✅ ensures JSON requests
+    "Content-Type": "application/json",
   },
-  timeout: 10000, // optional, recommended
 });
 
-// 🔐 Request interceptor: attach token
+// 🔐 Attach token automatically
 api.interceptors.request.use(
   async (config) => {
     const token = await getToken();
-    console.log("Attaching token to request:", token);
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -22,13 +22,13 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// 🚫 Response interceptor: handle errors globally
+// 🚫 Handle auth errors globally
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      console.log("Unauthorized - 401: token invalid or expired");
-      // Optional: redirect to login or clear token
+      console.log("Unauthorized - token expired or invalid");
+      // optional: logout, clear storage, redirect
     }
     return Promise.reject(error);
   }

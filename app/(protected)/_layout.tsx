@@ -1,22 +1,28 @@
-import { router, Stack } from "expo-router";
-import { useSelector } from "react-redux";
-import { RootState } from "../store";
+import { Stack, router } from "expo-router";
+import { useEffect, useState } from "react";
+import { getToken } from "../utils/storage";
 
 export default function ProtectedLayout() {
-  // Mock auth check - in real app, check actual auth state
-  const isAuthenticated = useSelector(
-    (state: RootState) => state.auth.isAuthenticated
-  );
+  const [checkingAuth, setCheckingAuth] = useState(true);
 
-  if (!isAuthenticated) {
-    router.replace("/(public)/login");
-    return null;
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = await getToken(); // ✅ await token
+
+      if (!token) {
+        router.replace("/(public)/login");
+      }
+
+      setCheckingAuth(false);
+    };
+
+    checkAuth();
+  }, []);
+
+  // ⛔ Block rendering until auth check completes
+  if (checkingAuth) {
+    return null; // or loader
   }
 
-  return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="kyc" />
-      <Stack.Screen name="(tabs)" />
-    </Stack>
-  );
+  return <Stack screenOptions={{ headerShown: false }} />;
 }

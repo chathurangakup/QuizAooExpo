@@ -1,23 +1,17 @@
 // api/auth.api.ts
-import axios from "axios";
+import api from "../services/api";
 
-export const api = axios.create({
-  baseURL: "http://192.168.1.112:4000/api", // later change
-  timeout: 10000,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
+export const authApi = {
+  login: (data: { email: string; password: string }) =>
+    api.post("/auth/login", data),
 
-// Response interceptor
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      console.log("Unauthorized - 401");
-    }
-    return Promise.reject(error);
-  }
-);
+  register: (data: {
+    name: string;
+    email: string;
+    phone: string;
+    country: string;
+    password: string;
+  }) => api.post("/auth/register", data),
 
-export default api;
+  getProfile: () => api.get("/auth/user-details"), // token auto-attached
+};

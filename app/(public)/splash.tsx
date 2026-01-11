@@ -2,6 +2,7 @@ import PrimaryButton from "@/components/common/PrimaryButton";
 import { images } from "@/constants/images";
 import { router } from "expo-router";
 import { Image, ImageBackground, StyleSheet, Text, View } from "react-native";
+import { getToken } from "../utils/storage";
 
 export default function SplashScreen() {
   return (
@@ -30,8 +31,14 @@ export default function SplashScreen() {
       {/* Bottom button */}
       <PrimaryButton
         title="START"
-        onPress={() => {
-          router.push("/(public)/onboarding");
+        onPress={async () => {
+          const token = await getToken();
+          console.log("Attaching token to request:", token);
+          if (token) {
+            router.push("/(protected)/kyc");
+          } else {
+            router.push("/(public)/login");
+          }
         }}
         style={styles.button}
       />
