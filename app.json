@@ -8,21 +8,22 @@
     "scheme": "taskearn",
     "userInterfaceStyle": "automatic",
     "splash": {
-      // "image": "./assets/images/splash.png",
+      "image": "./assets/images/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#6366F1"
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.yourapp.taskearn"
+      "bundleIdentifier": "com.upctechhub.quizbot"
     },
     "android": {
       "adaptiveIcon": {
         // "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#6366F1"
       },
-      "package": "com.yourapp.taskearn"
+      "package": "com.upctechhub.quizbot",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "bundler": "metro",

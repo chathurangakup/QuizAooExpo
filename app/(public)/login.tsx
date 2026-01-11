@@ -1,7 +1,12 @@
+import Header from "@/components/common/Header";
 import Input from "@/components/common/Input";
 import PrimaryButton from "@/components/common/PrimaryButton";
+import Checkbox from "expo-checkbox";
 import { router } from "expo-router";
 import { useState } from "react";
+import { Image } from "react-native";
+
+import { images } from "@/constants/images";
 import {
   ScrollView,
   StyleSheet,
@@ -10,12 +15,15 @@ import {
   View,
 } from "react-native";
 import { authService } from "../services/auth.service";
+import { kycService } from "../services/kyc.service";
+import { saveToken } from "../utils/storage";
 
 export default function LoginScreen() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
+  const [rememberMe, setRememberMe] = useState(false);
 
   const handleLogin = async () => {
     // Mock login
@@ -32,29 +40,49 @@ export default function LoginScreen() {
       console.log("User:", user);
       console.log("Token:", token);
       console.log("Message:", message);
+      // 🔐 Securely save token
+      await saveToken(token);
 
-      // 🔐 Save token later (AsyncStorage / SecureStore)
-      // await SecureStore.setItemAsync("token", token)9
+      const kyc = await kycService.getMyKyc();
+      console.log("My KYC:", kyc);
 
-      router.replace("/(protected)/(tabs)/home");
-    } catch (error: any) {
-      const status = error.response?.status;
-      const message = error.response?.data?.message || "Something went wrong";
-
-      if (status === 401) {
-        console.log(message); // 👈 show "Invalid credentials"
+      // 👉 Navigate based on KYC status
+      if (kyc?.status === "COMPLETED") {
+        router.replace("/(protected)/(tabs)/home");
       } else {
-        console.log("Server error. Please try again.");
+        router.replace("/(protected)/kyc");
+      }
+    } catch (error: any) {
+      if (error.response) {
+        if (error.response.status === 401) {
+          console.log(error.response.data.message || "Invalid credentials");
+        } else {
+          console.log("Server error:", error.response.data.message);
+        }
+      } else if (error.request) {
+        console.log(error.request);
+      } else {
+        console.log("AXIOS ERROR:", error.message);
       }
     }
   };
 
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.title}>Welcome Back</Text>
-        <Text style={styles.subtitle}>Sign in to continue earning</Text>
+      <Header onBack={() => router.back()} hideProgress={true} />
+      <View style={styles.topSection}>
+        <Image
+          source={images.loginWrite}
+          style={styles.loginImage}
+          resizeMode="contain"
+        />
 
+        <Text style={styles.loginTitle}>
+          Sign in to <Text style={styles.brand}>Quizzie Bot</Text>
+        </Text>
+      </View>
+
+      <View style={styles.content}>
         <View style={styles.form}>
           <Input
             label="Email"
@@ -75,15 +103,28 @@ export default function LoginScreen() {
             style={styles.inputSpacing}
           />
         </View>
+        <View style={styles.rememberRow}>
+          <Checkbox
+            value={rememberMe}
+            onValueChange={setRememberMe}
+            color={rememberMe ? "#6366F1" : undefined}
+          />
+          <Text style={styles.rememberText}>Remember me</Text>
+        </View>
 
-        <TouchableOpacity style={styles.forgotPassword}>
-          <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-        </TouchableOpacity>
+        <View style={styles.forgotDivider}>
+          <View style={styles.dividerLine} />
+          <TouchableOpacity>
+            <Text style={styles.forgotText}>Forgot Password</Text>
+          </TouchableOpacity>
+          <View style={styles.dividerLine} />
+        </View>
 
         <PrimaryButton
           title="Sign In"
           onPress={handleLogin}
           style={styles.loginButton}
+          variant="secondary"
         />
 
         <View style={styles.registerContainer}>
@@ -98,10 +139,31 @@ export default function LoginScreen() {
           <Text style={styles.dividerText}>OR</Text>
           <View style={styles.dividerLine} />
         </View>
+        <View style={styles.socialRow}>
+          <TouchableOpacity style={styles.socialButton}>
+            <Image
+              source={images.google}
+              style={styles.socialIcon}
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
 
-        <TouchableOpacity style={styles.googleButton}>
-          <Text style={styles.googleButtonText}>Continue with Google</Text>
-        </TouchableOpacity>
+          <TouchableOpacity style={styles.socialButton}>
+            <Image
+              source={images.apple}
+              style={styles.socialIcon}
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.socialButton}>
+            <Image
+              source={images.facebook}
+              style={styles.socialIcon}
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
+        </View>
       </View>
     </ScrollView>
   );
@@ -179,5 +241,70 @@ const styles = StyleSheet.create({
   googleButtonText: {
     color: "#374151",
     fontWeight: "600",
+  },
+  topSection: {
+    alignItems: "center",
+    marginBottom: 24,
+  },
+
+  loginImage: {
+    width: 220,
+    height: 160,
+    marginBottom: 16,
+  },
+
+  loginTitle: {
+    fontSize: 22,
+    fontWeight: "600",
+    color: "#1F2937",
+  },
+
+  brand: {
+    color: "#6366F1", // PRIMARY COLOR
+    fontWeight: "700",
+  },
+
+  rememberRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+
+  rememberText: {
+    marginLeft: 8,
+    color: "#374151",
+    fontSize: 14,
+  },
+
+  forgotDivider: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 24,
+  },
+
+  forgotText: {
+    color: "#6366F1",
+    fontWeight: "600",
+    paddingHorizontal: 12,
+  },
+  socialRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 16,
+  },
+
+  socialButton: {
+    flex: 1,
+    height: 56,
+    borderRadius: 12,
+
+    justifyContent: "center",
+    alignItems: "center",
+    marginHorizontal: 6,
+  },
+
+  socialIcon: {
+    width: 40,
+    height: 40,
   },
 });

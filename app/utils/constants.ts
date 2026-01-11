@@ -50,3 +50,12 @@ export const constants = {
   WITHDRAWAL_MAX_AMOUNT: 1000,
   DAILY_TASK_LIMIT: 20,
 };
+
+export const countries = [
+  "Sri Lanka",
+  "India",
+  "United States",
+  "United Kingdom",
+  "Canada",
+  "Australia",
+];

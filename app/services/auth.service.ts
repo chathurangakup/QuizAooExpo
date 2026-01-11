@@ -1,4 +1,5 @@
-import { api } from "../api/auth.api";
+// services/auth.service.ts
+import { authApi } from "../api/auth.api";
 
 export interface LoginCredentials {
   email: string;
@@ -9,60 +10,28 @@ export interface RegisterData {
   name: string;
   email: string;
   phone: string;
+  country: string;
   password: string;
 }
 
 export const authService = {
   login: async (credentials: LoginCredentials) => {
-    return api.post("/auth/login", credentials);
-
-    // Real implementation:
-    // return api.post('/auth/login', credentials);
+    const response = await authApi.login(credentials);
+    console.log("Auth Service - Login Response:", JSON.stringify(response));
+    return response;
   },
 
   register: async (data: RegisterData) => {
-    // Mock API call
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          data: {
-            user: {
-              id: "1",
-              name: data.name,
-              email: data.email,
-              phone: data.phone,
-            },
-            token: "mock-jwt-token",
-          },
-        });
-      }, 1000);
-    });
-
-    // Real implementation:
-    // return api.post('/auth/register', data);
-  },
-
-  logout: async () => {
-    // Clear token from storage
-    // await SecureStore.deleteItemAsync('token');
+    const response = await authApi.register(data);
+    return response.data;
   },
 
   getProfile: async () => {
-    // Mock API call
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          data: {
-            id: "1",
-            name: "John Doe",
-            email: "john.doe@example.com",
-            phone: "+1234567890",
-          },
-        });
-      }, 1000);
-    });
+    const response = await authApi.getProfile();
+    return response.data;
+  },
 
-    // Real implementation:
-    // return api.get('/auth/profile');
+  logout: async () => {
+    // clear token from storage
   },
 };

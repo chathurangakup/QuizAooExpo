@@ -1,30 +1,27 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+// store/auth/authSlice.ts
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { authService } from "../services/auth.service";
 
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  avatar?: string;
-}
+export const fetchProfile = createAsyncThunk(
+  "auth/fetchProfile",
+  async (_, { rejectWithValue }) => {
+    try {
+      return await authService.getProfile();
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data);
+    }
+  }
+);
 
 interface AuthState {
+  user: any | null;
   isAuthenticated: boolean;
-  user: User | null;
-  token: string | null;
   loading: boolean;
 }
 
 const initialState: AuthState = {
-  isAuthenticated: true, // Changed to true for testing
-  user: {
-    id: "1",
-    name: "John Doe",
-    email: "john.doe@example.com",
-    phone: "+1234567890",
-    avatar: "https://via.placeholder.com/100",
-  },
-  token: "mock-token",
+  user: null,
+  isAuthenticated: false,
   loading: false,
 };
 
@@ -32,61 +29,31 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    login: (
-      state,
-      action: PayloadAction<{ email: string; password: string }>
-    ) => {
-      state.loading = true;
-    },
-    loginSuccess: (
-      state,
-      action: PayloadAction<{ user: User; token: string }>
-    ) => {
+    setUser(state, action) {
+      state.user = action.payload;
       state.isAuthenticated = true;
-      state.user = action.payload.user;
-      state.token = action.payload.token;
-      state.loading = false;
     },
-    loginFailure: (state) => {
-      state.loading = false;
-    },
-    register: (state, action: PayloadAction<any>) => {
-      state.loading = true;
-    },
-    registerSuccess: (
-      state,
-      action: PayloadAction<{ user: User; token: string }>
-    ) => {
-      state.isAuthenticated = true;
-      state.user = action.payload.user;
-      state.token = action.payload.token;
-      state.loading = false;
-    },
-    registerFailure: (state) => {
-      state.loading = false;
-    },
-    logout: (state) => {
-      state.isAuthenticated = false;
+
+    logout(state) {
       state.user = null;
-      state.token = null;
+      state.isAuthenticated = false;
     },
-    updateUser: (state, action: PayloadAction<Partial<User>>) => {
-      if (state.user) {
-        state.user = { ...state.user, ...action.payload };
-      }
-    },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchProfile.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchProfile.fulfilled, (state, action) => {
+        state.user = action.payload;
+        state.isAuthenticated = true;
+        state.loading = false;
+      })
+      .addCase(fetchProfile.rejected, (state) => {
+        state.loading = false;
+      });
   },
 });
 
-export const {
-  login,
-  loginSuccess,
-  loginFailure,
-  register,
-  registerSuccess,
-  registerFailure,
-  logout,
-  updateUser,
-} = authSlice.actions;
-
+export const { setUser, logout } = authSlice.actions;
 export default authSlice.reducer;
