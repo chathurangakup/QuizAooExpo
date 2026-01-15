@@ -8,4 +8,15 @@ export const taskApi = {
       },
     });
   },
+  getQuestionsByQuizId: (quizId: string) => {
+    return api.get(`/qoptions/quiz/${quizId}`);
+  },
+
+  submitQuiz: (quizId: string, answers: string[]) => {
+    return api.post(`/submitquiz/${quizId}/submit`, { answers });
+  },
+
+  getQuizSubmissions: () => {
+    return api.get("/submitquiz/getsubmitquiz");
+  },
 };

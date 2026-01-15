@@ -1,24 +1,34 @@
 import { StyleSheet, Text, View } from "react-native";
 
 interface BalanceCardProps {
-  balance: number;
+  totalBalance: number;
+  todayEarnings: number;
+  availableToWithdraw: number;
 }
 
-export default function BalanceCard({ balance }: BalanceCardProps) {
+export default function BalanceCard({
+  totalBalance,
+  todayEarnings,
+  availableToWithdraw,
+}: BalanceCardProps) {
   return (
     <View style={styles.container}>
       <Text style={styles.label}>Total Balance</Text>
-      <Text style={styles.balance}>${balance.toFixed(2)}</Text>
+      <Text style={styles.balance}>${totalBalance.toFixed(2)}</Text>
 
       <View style={styles.statsRow}>
         <View style={styles.statItem}>
           <Text style={styles.statLabel}>Today's Earnings</Text>
-          <Text style={styles.statValue}>+$12.50</Text>
+          <Text style={styles.statValue}>+${todayEarnings.toFixed(2)}</Text>
         </View>
+
         <View style={styles.statDivider} />
+
         <View style={styles.statItem}>
           <Text style={styles.statLabel}>Available to Cashout</Text>
-          <Text style={styles.statValue}>${(balance * 0.8).toFixed(2)}</Text>
+          <Text style={styles.statValue}>
+            ${availableToWithdraw.toFixed(2)}
+          </Text>
         </View>
       </View>
     </View>

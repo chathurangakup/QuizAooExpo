@@ -1,12 +1,8 @@
+import { RootState } from "@/app/store/rootReducer";
+import { fetchWallet } from "@/app/store/wallet/wallet.slice";
 import BalanceCard from "@/components/wallet/BalanceCard";
 import { Ionicons } from "@expo/vector-icons";
-import {
-  JSXElementConstructor,
-  Key,
-  ReactElement,
-  ReactNode,
-  ReactPortal,
-} from "react";
+import { useEffect } from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -14,15 +10,20 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useSelector } from "react-redux";
-import { RootState } from "../../store";
+import { useDispatch, useSelector } from "react-redux";
 
 export default function WalletScreen() {
-  const balance = useSelector((state: RootState) => state.wallet.balance);
-  const transactions = useSelector(
-    (state: RootState) => state.wallet.transactions
-  );
+  const dispatch = useDispatch<any>();
 
+  const { wallet, loading } = useSelector((state: RootState) => state.wallet);
+
+  useEffect(() => {
+    dispatch(fetchWallet());
+  }, []);
+
+  if (loading || !wallet) {
+    return null; // you can add loader here later
+  }
   const quickActions = [
     { id: 1, icon: "arrow-up-circle", title: "Withdraw", color: "#10B981" },
     { id: 2, icon: "add-circle", title: "Deposit", color: "#6366F1" },
@@ -32,8 +33,13 @@ export default function WalletScreen() {
 
   return (
     <ScrollView style={styles.container}>
+      <Text style={styles.sectionTitle}>Wallet</Text>
       <View style={styles.content}>
-        <BalanceCard balance={balance} />
+        <BalanceCard
+          totalBalance={wallet.totalEarnings}
+          todayEarnings={wallet.todayEarnings}
+          availableToWithdraw={wallet.availableToWithdraw}
+        />
 
         <Text style={styles.sectionTitle}>Quick Actions</Text>
         <View style={styles.quickActions}>
@@ -63,7 +69,7 @@ export default function WalletScreen() {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.transactionsList}>
+        {/* <View style={styles.transactionsList}>
           {transactions
             .slice(0, 5)
             .map(
@@ -192,7 +198,7 @@ export default function WalletScreen() {
                 </View>
               )
             )}
-        </View>
+        </View> */}
       </View>
     </ScrollView>
   );

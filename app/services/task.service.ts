@@ -5,4 +5,16 @@ export const taskService = {
     const response = await taskApi.getAllQuiz(difficulty);
     return response.data;
   },
+  getQuizById: async (quizId: string) => {
+    const response = await taskApi.getQuestionsByQuizId(quizId);
+    return response.data;
+  },
+  submitQuiz: async (quizId: string, answers: string[]) => {
+    const response = await taskApi.submitQuiz(quizId, answers);
+    return response.data;
+  },
+  getQuizSubmissions: async () => {
+    const response = await taskApi.getQuizSubmissions();
+    return response.data;
+  },
 };

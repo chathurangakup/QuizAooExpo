@@ -159,7 +159,7 @@ export default function KYCScreen() {
   };
 
   const skipKYC = () => {
-    router.replace("/(protected)/(tabs)/home");
+    router.replace("/(protected)/(tabs)/home/home");
   };
 
   return (

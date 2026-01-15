@@ -1,5 +1,5 @@
 import { RootState } from "@/app/store/rootReducer";
-import { fetchQuizzes } from "@/app/store/task.slice";
+import { fetchQuizzes } from "@/app/store/task/task.thunks";
 import SearchBar from "@/components/home/SearchBar";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";

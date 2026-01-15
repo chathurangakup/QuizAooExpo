@@ -1,5 +1,5 @@
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { Task } from "./../../app/store/task.slice";
+import { Task } from "../../app/store/task/task.slice";
 
 interface TaskCardProps {
   task: Task;

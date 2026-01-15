@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { RootState } from "@/app/store/rootReducer";
+import { fetchQuizSubmissions } from "@/app/store/task/task.thunks";
+import { useEffect, useState } from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -6,28 +8,44 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useSelector } from "react-redux";
-import { RootState } from "../../store";
+import { useDispatch, useSelector } from "react-redux";
+// import { RootState } from "../../store";
 
 export default function HistoryScreen() {
   const [activeTab, setActiveTab] = useState<
     "all" | "completed" | "pending" | "cancelled"
   >("all");
-  const tasks = useSelector((state: RootState) => state.task.tasks);
-  const transactions = useSelector(
-    (state: RootState) => state.wallet.transactions
+
+  const dispatch = useDispatch<any>();
+
+  const { submissions, loading } = useSelector(
+    (state: RootState) => state.task
   );
+
+  useEffect(() => {
+    dispatch(fetchQuizSubmissions());
+  }, []);
+
+  if (loading) return null;
 
   const tabs = [
     { id: "all", label: "All" },
-    { id: "completed", label: "Completed" },
-    { id: "pending", label: "Pending" },
-    { id: "cancelled", label: "Cancelled" },
+    { id: "completed", label: "Processing" },
+    { id: "pending", label: "Completed" },
   ];
 
-  const filteredTasks = tasks.filter((task) => {
+  const filteredSubmissions = submissions.filter((item) => {
     if (activeTab === "all") return true;
-    return task.status === activeTab;
+
+    if (activeTab === "completed") {
+      return item.quiz_status === "PROCESSING";
+    }
+
+    if (activeTab === "pending") {
+      return item.quiz_status === "COMPLETED";
+    }
+
+    return true;
   });
 
   return (
@@ -54,7 +72,7 @@ export default function HistoryScreen() {
           ))}
         </View>
 
-        <View style={styles.statsContainer}>
+        {/* <View style={styles.statsContainer}>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{tasks.length}</Text>
             <Text style={styles.statLabel}>Total Tasks</Text>
@@ -74,9 +92,9 @@ export default function HistoryScreen() {
             </Text>
             <Text style={styles.statLabel}>Completed</Text>
           </View>
-        </View>
+        </View> */}
 
-        <View style={styles.historyList}>
+        {/* <View style={styles.historyList}>
           <Text style={styles.sectionTitle}>Recent Activities</Text>
           {filteredTasks.slice(0, 10).map((task) => (
             <View key={task.id} style={styles.historyItem}>
@@ -123,11 +141,73 @@ export default function HistoryScreen() {
               </View>
             </View>
           ))}
-        </View>
+        </View> */}
 
-        <TouchableOpacity style={styles.loadMoreButton}>
-          <Text style={styles.loadMoreText}>Load More</Text>
-        </TouchableOpacity>
+        <View style={styles.historyList}>
+          <Text style={styles.sectionTitle}>Recent Activities</Text>
+
+          {filteredSubmissions.length === 0 ? (
+            <Text
+              style={{ color: "#6B7280", textAlign: "center", marginTop: 12 }}
+            >
+              No records found
+            </Text>
+          ) : (
+            filteredSubmissions.map((item) => (
+              <View key={item.id} style={styles.historyItem}>
+                {/* Left */}
+                <View style={styles.taskInfo}>
+                  <View style={styles.taskIcon}>
+                    <Text style={styles.taskIconText}>📝</Text>
+                  </View>
+                  <View>
+                    <Text style={styles.taskTitle}>{item.quiz_title}</Text>
+                    <Text style={styles.taskDate}>
+                      {new Date(item.submitted_at).toLocaleDateString()}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Right */}
+                <View style={styles.taskStatus}>
+                  <View
+                    style={[
+                      styles.statusBadge,
+                      {
+                        backgroundColor:
+                          item.quiz_status === "COMPLETED"
+                            ? "#ECFDF5"
+                            : item.quiz_status === "PROCESSING"
+                            ? "#FEF3C7"
+                            : "#E0E7FF",
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.statusText,
+                        {
+                          color:
+                            item.quiz_status === "COMPLETED"
+                              ? "#065F46"
+                              : item.quiz_status === "PROCESSING"
+                              ? "#92400E"
+                              : "#3730A3",
+                        },
+                      ]}
+                    >
+                      {item.quiz_status}
+                    </Text>
+                  </View>
+
+                  <Text style={styles.taskReward}>
+                    {item.score}/{item.total_questions}
+                  </Text>
+                </View>
+              </View>
+            ))
+          )}
+        </View>
       </View>
     </ScrollView>
   );

@@ -48,7 +48,7 @@ export default function LoginScreen() {
 
       // 👉 Navigate based on KYC status
       if (kyc?.status === "COMPLETED") {
-        router.replace("/(protected)/(tabs)/home");
+        router.replace("/(protected)/(tabs)/home/home");
       } else {
         router.replace("/(protected)/kyc");
       }
