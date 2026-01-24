@@ -32,9 +32,9 @@ export default function HomeScreen() {
     dispatch(fetchQuizzes("EASY"));
   }, []);
 
-  console.log("Selected Difficulty:", tasks);
+  // console.log("Selected Difficulty:", tasks);
 
-  console.log("Tasks:", tasks);
+  // console.log("Tasks:", tasks);
   function DifficultyButton({
     label,
     value,

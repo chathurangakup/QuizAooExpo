@@ -7,4 +7,7 @@ export const images = {
   google: require("../assets/images/Google.png"),
   facebook: require("../assets/images/Facebook.png"),
   apple: require("../assets/images/Apple.png"),
+  bgsuccess: require("../assets/images/bgsuccess.png"),
+  success: require("../assets/images/success.png"),
+  profile: require("../assets/images/profile.png"),
 };

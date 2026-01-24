@@ -12,6 +12,7 @@ export const fetchQuizzes = createAsyncThunk<
 >("task/fetchQuizzes", async (difficulty, { rejectWithValue }) => {
   try {
     const data = await taskService.getQuiz(difficulty);
+    console.log("Fetched Quizzes Data:", data);
     return data.quizzes?.map(mapQuizToTask) ?? [];
   } catch (error: any) {
     return rejectWithValue(
@@ -28,11 +29,10 @@ export const fetchQuizById = createAsyncThunk<
 >("task/fetchQuizById", async (quizId, { rejectWithValue }) => {
   try {
     const data = await taskService.getQuizById(quizId);
+    console.log("data", data);
     return mapQuizToQuizTask(data);
   } catch (error: any) {
-    return rejectWithValue(
-      error?.response?.data?.message || "Failed to fetch quiz"
-    );
+    return mapQuizToQuizTask("");
   }
 });
 

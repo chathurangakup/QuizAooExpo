@@ -1,7 +1,9 @@
+import AppModal from "@/components/common/AppModal";
 import CountryDropdown from "@/components/common/CountryDropdown";
 import Header from "@/components/common/Header";
 import Input from "@/components/common/Input";
 import PrimaryButton from "@/components/common/PrimaryButton";
+import { images } from "@/constants/images";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -22,8 +24,9 @@ export default function RegisterScreen() {
     password: "",
     confirmPassword: "",
   });
-  const [country, setCountry] = useState<string>();
+  const [country, setCountry] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const requiredFields = [
     formData.fullName,
@@ -36,11 +39,14 @@ export default function RegisterScreen() {
 
   // count filled fields
   const filledCount = requiredFields.filter(
-    (field) => field && field.toString().trim().length > 0
+    (field) => field && field.toString().trim().length > 0,
   ).length;
 
   // progress value between 0 - 1
-  const progress = filledCount / requiredFields.length;
+  const progress =
+    requiredFields.length > 0
+      ? Math.min(1, Math.max(0, filledCount / requiredFields.length))
+      : 0;
 
   // button enable condition
 
@@ -52,22 +58,25 @@ export default function RegisterScreen() {
         name: formData.fullName,
         email: formData.email,
         phone: formData.phone,
-        country: country!, // safe because button enabled only when filled
+        country: country!,
         password: formData.password,
       };
 
       const response = await authService.register(payload);
-
-      if (response.status === 200 || response.status === 201) {
-        // ✅ Navigate to Sign In page
-        router.replace("/(public)/login");
+      console.log("Register Response:", response);
+      if (response.message) {
+        console.log("Registration successful:", response);
+        setShowSuccessModal(true);
+        // ✅ Show success modal instead of navigating immediately
+        setTimeout(() => {
+          setShowSuccessModal(true);
+        }, 150); // small delay for iOS safety
       }
     } catch (error: any) {
       console.error(
         "Registration failed:",
-        error.response?.data || error.message
+        error.response?.data || error.message,
       );
-      // later: show toast / error message
     } finally {
       setLoading(false);
     }
@@ -83,6 +92,20 @@ export default function RegisterScreen() {
 
   return (
     <ScrollView style={styles.container}>
+      <AppModal
+        visible={showSuccessModal}
+        image={images.success} // optional
+        bgImage={images.bgsuccess} // optional
+        title="Registration Successful 🎉"
+        description="Your account has been created successfully. Please sign in to continue."
+        buttonText="Go to Login"
+        onClose={() => setShowSuccessModal(false)}
+        onPress={() => {
+          setShowSuccessModal(false);
+          router.replace("/(public)/login");
+        }}
+      />
+
       <Header
         progress={progress}
         onBack={() => router.back()}

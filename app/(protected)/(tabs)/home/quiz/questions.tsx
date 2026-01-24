@@ -1,12 +1,16 @@
 import { RootState } from "@/app/store/rootReducer";
 import { fetchQuizById, submitQuiz } from "@/app/store/task/task.thunks";
 import { QuizTask } from "@/app/store/task/task.types";
+import AppModal from "@/components/common/AppModal";
 import Header from "@/components/common/Header";
 import LottieLoader from "@/components/common/LottieLoader";
+import PrimaryButton from "@/components/common/PrimaryButton";
 import ProgressBar from "@/components/home/ProgressBar";
+import { images } from "@/constants/images";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {
+  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -18,6 +22,9 @@ import { useDispatch, useSelector } from "react-redux";
 export default function QuestionsScreen() {
   const { quizId } = useLocalSearchParams<{ quizId: string }>();
   const dispatch = useDispatch<any>();
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  const [modalTriggered, setModalTriggered] = useState(false); // ✅ prevent multiple triggers
 
   const selectedQuiz: QuizTask | null = useSelector(
     (state: RootState) => state.task.selectedTask
@@ -33,6 +40,7 @@ export default function QuestionsScreen() {
   // ✅ Fetch quiz
   useEffect(() => {
     if (quizId) {
+      console.log("quizId", quizId);
       dispatch(fetchQuizById(quizId));
     }
   }, [quizId, dispatch]);
@@ -58,32 +66,40 @@ export default function QuestionsScreen() {
     setSelectedOption(option);
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!selectedOption) return;
 
-    setAnswers((prev) => {
-      const updated = [...prev];
-      updated[currentIndex] = selectedOption;
-      return updated;
-    });
+    // Build updated answers immediately
+    const updatedAnswers = [...answers];
+    updatedAnswers[currentIndex] = selectedOption;
+    setAnswers(updatedAnswers);
 
     if (!isLastQuestion) {
       setCurrentIndex((prev) => prev + 1);
+      setSelectedOption(null);
     } else {
-      const finalAnswers = [...answers];
-      finalAnswers[currentIndex] = selectedOption;
+      //if (modalTriggered) return; // prevent multiple triggers
 
-      console.log("Final Answers:", finalAnswers);
-      // 👉 submit answers here
+      try {
+        console.log("updatedAns", updatedAnswers);
+        setShowSuccessModal(true);
+        const response = await dispatch(
+          submitQuiz({ quizId, answers: updatedAnswers })
+        ).unwrap();
 
-      dispatch(submitQuiz({ quizId: quizId, answers: finalAnswers }))
-        .unwrap()
-        .then((res: any) => {
-          console.log("Quiz submitted successfully:", res);
-        })
-        .catch((err: any) => {
-          console.error("Submit quiz failed:", err);
-        });
+        if (response?.message) {
+          // ✅ Show success modal
+
+          setShowSuccessModal(true);
+
+          console.log("Quiz submitted successfully:", response);
+          // Optional iOS safety delay
+        }
+      } catch (error: any) {
+        console.error("Submit quiz failed:", error);
+      } finally {
+        //setSubmitting(false);
+      }
     }
   };
 
@@ -95,13 +111,38 @@ export default function QuestionsScreen() {
 
   return (
     <View style={styles.screen}>
+      <View>
+        <AppModal
+          image={images.success}
+          bgImage={images.bgsuccess}
+          visible={showSuccessModal}
+          title="Successful 🎉"
+          description="Please wait a moment, we are preparing for you..."
+          buttonText="Back to Home"
+          onClose={() => setShowSuccessModal(false)} // ✅ properly closes modal
+          onPress={() => {
+            setShowSuccessModal(false);
+            router.replace("/(protected)/(tabs)/home/home"); // ✅ back to home
+          }}
+        />
+      </View>
+
       <Header title="Questions" onBack={() => router.back()} hideProgress />
       <LottieLoader visible={loading} />
-
+      <Text>{showSuccessModal}</Text>
       {/* Counter */}
+
       <Text style={styles.counter}>
-        {currentIndex + 1} / {selectedQuiz.questions.length}
+        Question {currentIndex + 1} of {selectedQuiz.questions.length}{" "}
+        {showSuccessModal.toString()}
       </Text>
+      <View style={{ justifyContent: "center", alignItems: "center" }}>
+        <Image
+          source={images.loginWrite}
+          style={styles.loginImage}
+          resizeMode="contain"
+        />
+      </View>
 
       {/* Progress */}
       <View style={{ paddingHorizontal: 20, marginTop: 8 }}>
@@ -164,7 +205,7 @@ export default function QuestionsScreen() {
             <Text style={styles.arrow}>⬅</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={[styles.nextButton, !selectedOption && styles.nextDisabled]}
             disabled={!selectedOption}
             onPress={handleNext}
@@ -172,8 +213,19 @@ export default function QuestionsScreen() {
             <Text style={styles.nextText}>
               {isLastQuestion ? "Submit" : "Next"}
             </Text>
-          </TouchableOpacity>
-
+          </TouchableOpacity> */}
+          <View>
+            <PrimaryButton
+              title={isLastQuestion ? "Submit" : "Next"}
+              onPress={handleNext}
+              style={[
+                styles.nextButton,
+                !selectedOption && styles.nextDisabled,
+              ]}
+              disabled={!selectedOption}
+              variant="secondary"
+            />
+          </View>
           <TouchableOpacity onPress={handleNext} disabled={!selectedOption}>
             <Text style={styles.arrow}>➡</Text>
           </TouchableOpacity>
@@ -193,6 +245,12 @@ const styles = StyleSheet.create({
   center: {
     justifyContent: "center",
     alignItems: "center",
+  },
+  loginImage: {
+    width: 220,
+    height: 160,
+    marginBottom: 16,
+    alignContent: "center",
   },
 
   counter: {
@@ -259,9 +317,10 @@ const styles = StyleSheet.create({
 
   nextButton: {
     backgroundColor: "#1C58F2",
-    paddingHorizontal: 100,
+
     paddingVertical: 14,
     borderRadius: 30,
+    width: 200,
   },
 
   nextDisabled: {

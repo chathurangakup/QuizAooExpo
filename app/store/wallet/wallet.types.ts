@@ -13,4 +13,13 @@ export interface WalletState {
   wallet: Wallet | null;
   loading: boolean;
   error: string | null;
+  transactions: WalletTransaction[];
+}
+
+export interface WalletTransaction {
+  id: string;
+  type: "QUIZ_REWARD" | "WITHDRAW" | "DEPOSIT";
+  amount: number;
+  referenceId: string;
+  createdAt: string;
 }

@@ -1,9 +1,13 @@
 import { RootState } from "@/app/store/rootReducer";
-import { fetchWallet } from "@/app/store/wallet/wallet.slice";
+import {
+  fetchWallet,
+  fetchWalletTransactions,
+} from "@/app/store/wallet/wallet.thunk";
 import BalanceCard from "@/components/wallet/BalanceCard";
 import { Ionicons } from "@expo/vector-icons";
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import {
+  FlatList,
   ScrollView,
   StyleSheet,
   Text,
@@ -12,28 +16,42 @@ import {
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 
-export default function WalletScreen() {
+const WalletScreen = () => {
   const dispatch = useDispatch<any>();
 
-  const { wallet, loading } = useSelector((state: RootState) => state.wallet);
-
+  const { wallet, transactions, loading } = useSelector(
+    (state: RootState) => state.wallet
+  );
   useEffect(() => {
     dispatch(fetchWallet());
+    dispatch(fetchWalletTransactions());
   }, []);
 
-  if (loading || !wallet) {
-    return null; // you can add loader here later
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <Text>Loading wallet...</Text>
+      </View>
+    );
   }
+
+  if (!wallet) {
+    return (
+      <View style={styles.center}>
+        <Text>No wallet data</Text>
+      </View>
+    );
+  }
+
   const quickActions = [
     { id: 1, icon: "arrow-up-circle", title: "Withdraw", color: "#10B981" },
     { id: 2, icon: "add-circle", title: "Deposit", color: "#6366F1" },
     { id: 3, icon: "repeat", title: "Transfer", color: "#F59E0B" },
     { id: 4, icon: "receipt", title: "History", color: "#EF4444" },
   ];
-
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.sectionTitle}>Wallet</Text>
+      <Text style={styles.sectionMainTitle}>Wallet</Text>
       <View style={styles.content}>
         <BalanceCard
           totalBalance={wallet.totalEarnings}
@@ -68,141 +86,66 @@ export default function WalletScreen() {
             <Text style={styles.seeAll}>See All</Text>
           </TouchableOpacity>
         </View>
+        <View style={styles.transactionsList}>
+          <FlatList
+            data={transactions.slice(0, 5)}
+            keyExtractor={(item) => item.id}
+            scrollEnabled={false}
+            renderItem={({ item }) => {
+              const isCredit = item.type === "QUIZ_REWARD";
 
-        {/* <View style={styles.transactionsList}>
-          {transactions
-            .slice(0, 5)
-            .map(
-              (transaction: {
-                id: Key | null | undefined;
-                type: string;
-                description:
-                  | string
-                  | number
-                  | bigint
-                  | boolean
-                  | ReactElement<unknown, string | JSXElementConstructor<any>>
-                  | Iterable<ReactNode>
-                  | ReactPortal
-                  | Promise<
-                      | string
-                      | number
-                      | bigint
-                      | boolean
-                      | ReactPortal
-                      | ReactElement<
-                          unknown,
-                          string | JSXElementConstructor<any>
-                        >
-                      | Iterable<ReactNode>
-                      | null
-                      | undefined
-                    >
-                  | null
-                  | undefined;
-                date:
-                  | string
-                  | number
-                  | bigint
-                  | boolean
-                  | ReactElement<unknown, string | JSXElementConstructor<any>>
-                  | Iterable<ReactNode>
-                  | ReactPortal
-                  | Promise<
-                      | string
-                      | number
-                      | bigint
-                      | boolean
-                      | ReactPortal
-                      | ReactElement<
-                          unknown,
-                          string | JSXElementConstructor<any>
-                        >
-                      | Iterable<ReactNode>
-                      | null
-                      | undefined
-                    >
-                  | null
-                  | undefined;
-                amount:
-                  | string
-                  | number
-                  | bigint
-                  | boolean
-                  | ReactElement<unknown, string | JSXElementConstructor<any>>
-                  | Iterable<ReactNode>
-                  | ReactPortal
-                  | Promise<
-                      | string
-                      | number
-                      | bigint
-                      | boolean
-                      | ReactPortal
-                      | ReactElement<
-                          unknown,
-                          string | JSXElementConstructor<any>
-                        >
-                      | Iterable<ReactNode>
-                      | null
-                      | undefined
-                    >
-                  | null
-                  | undefined;
-              }) => (
-                <View key={transaction.id} style={styles.transactionItem}>
+              return (
+                <View style={styles.transactionItem}>
                   <View style={styles.transactionInfo}>
                     <View
                       style={[
                         styles.transactionIcon,
                         {
-                          backgroundColor:
-                            transaction.type === "credit"
-                              ? "#ECFDF5"
-                              : "#FEF2F2",
+                          backgroundColor: isCredit ? "#ECFDF5" : "#FEF2F2",
                         },
                       ]}
                     >
                       <Ionicons
-                        name={
-                          transaction.type === "credit"
-                            ? "arrow-down"
-                            : "arrow-up"
-                        }
+                        name={isCredit ? "arrow-down" : "arrow-up"}
                         size={20}
-                        color={
-                          transaction.type === "credit" ? "#10B981" : "#EF4444"
-                        }
+                        color={isCredit ? "#10B981" : "#EF4444"}
                       />
                     </View>
+
                     <View>
-                      <Text style={styles.transactionTitle}>
-                        {transaction.description}
-                      </Text>
+                      <Text style={styles.transactionTitle}>Quiz Reward</Text>
                       <Text style={styles.transactionDate}>
-                        {transaction.date}
+                        {new Date(item.createdAt).toLocaleDateString()}
                       </Text>
                     </View>
                   </View>
+
                   <Text
                     style={[
                       styles.transactionAmount,
-                      {
-                        color:
-                          transaction.type === "credit" ? "#10B981" : "#EF4444",
-                      },
+                      { color: isCredit ? "#10B981" : "#EF4444" },
                     ]}
                   >
-                    {transaction.type === "credit" ? "+" : "-"}$
-                    {transaction.amount}
+                    +${item.amount.toFixed(2)}
                   </Text>
                 </View>
-              )
+              );
+            }}
+            ItemSeparatorComponent={() => (
+              <View
+                style={{
+                  height: 1,
+                  backgroundColor: "#F3F4F6",
+                  marginVertical: 8,
+                }}
+              />
             )}
-        </View> */}
+          />
+        </View>
       </View>
     </ScrollView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -226,6 +169,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 24,
     marginBottom: 16,
+  },
+  sectionMainTitle: {
+    fontSize: 25,
+    fontWeight: "600",
+    color: "#1F2937",
+    marginTop: 24,
+    marginBottom: 16,
+    paddingLeft: 30,
   },
   seeAll: {
     color: "#6366F1",
@@ -290,4 +241,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
 });
+
+export default WalletScreen;

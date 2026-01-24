@@ -23,7 +23,7 @@ export default function Header({
       {/* Left: Arrow + Title */}
       <View style={styles.left}>
         <Pressable onPress={onBack} hitSlop={10}>
-          <Ionicons name="arrow-back" size={24} color={colors.gray[700]} />
+          <Ionicons name="arrow-back" size={24} color={colors.text.inverse} />
         </Pressable>
 
         {title && <Text style={styles.title}>{title}</Text>}
@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    fontSize: 16,
+    fontSize: 25,
     fontWeight: "600",
     color: colors.background.light,
   },

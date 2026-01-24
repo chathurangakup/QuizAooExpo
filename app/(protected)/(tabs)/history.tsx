@@ -1,7 +1,9 @@
 import { RootState } from "@/app/store/rootReducer";
 import { fetchQuizSubmissions } from "@/app/store/task/task.thunks";
+import { images } from "@/constants/images";
 import { useEffect, useState } from "react";
 import {
+  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -71,7 +73,13 @@ export default function HistoryScreen() {
             </TouchableOpacity>
           ))}
         </View>
-
+        <View style={{ flex: 1, alignItems: "center" }}>
+          <Image
+            source={images.searchBot}
+            style={styles.image}
+            resizeMode="contain"
+          />
+        </View>
         {/* <View style={styles.statsContainer}>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{tasks.length}</Text>
@@ -93,7 +101,6 @@ export default function HistoryScreen() {
             <Text style={styles.statLabel}>Completed</Text>
           </View>
         </View> */}
-
         {/* <View style={styles.historyList}>
           <Text style={styles.sectionTitle}>Recent Activities</Text>
           {filteredTasks.slice(0, 10).map((task) => (
@@ -142,7 +149,6 @@ export default function HistoryScreen() {
             </View>
           ))}
         </View> */}
-
         <View style={styles.historyList}>
           <Text style={styles.sectionTitle}>Recent Activities</Text>
 
@@ -219,6 +225,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#F9FAFB",
     paddingTop: 40,
   },
+  image: {
+    width: 200,
+    height: 200,
+    marginBottom: 16,
+  },
+
   content: {
     padding: 16,
   },

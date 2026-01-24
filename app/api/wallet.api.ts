@@ -6,4 +6,8 @@ export const walletApi = {
     const response = await api.get("/wallet");
     return response.data;
   },
+  getTransactions: async () => {
+    const res = await api.get("/wallet/transactions");
+    return res.data;
+  },
 };

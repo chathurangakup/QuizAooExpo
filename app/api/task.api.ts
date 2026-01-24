@@ -17,6 +17,6 @@ export const taskApi = {
   },
 
   getQuizSubmissions: () => {
-    return api.get("/submitquiz/getsubmitquiz");
+    return api.get("/submitquiz/my-quiz-submissions");
   },
 };

@@ -1,3 +1,6 @@
+import { RootState } from "@/app/store/rootReducer";
+import { removeToken } from "@/app/utils/storage";
+import { images } from "@/constants/images";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import {
@@ -9,7 +12,6 @@ import {
   View,
 } from "react-native";
 import { useSelector } from "react-redux";
-import { RootState } from "../../store";
 
 export default function ProfileScreen() {
   const user = useSelector((state: RootState) => state.auth.user);
@@ -31,6 +33,7 @@ export default function ProfileScreen() {
   ];
 
   const handleLogout = () => {
+    removeToken();
     router.replace("/(public)/login");
   };
 
@@ -38,10 +41,7 @@ export default function ProfileScreen() {
     <ScrollView style={styles.container}>
       <View style={styles.content}>
         <View style={styles.profileHeader}>
-          <Image
-            source={{ uri: "https://via.placeholder.com/100" }}
-            style={styles.profileImage}
-          />
+          <Image source={images.profile} style={styles.profileImage} />
           <View style={styles.profileInfo}>
             <Text style={styles.profileName}>{user?.name || "John Doe"}</Text>
             <Text style={styles.profileEmail}>
