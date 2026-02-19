@@ -1,4 +1,5 @@
 import { taskApi } from "../api/task.api";
+import { QuizAnswer } from "../store/task/task.thunks";
 
 export const taskService = {
   getQuiz: async (difficulty?: "EASY" | "MEDIUM" | "HARD") => {
@@ -9,7 +10,7 @@ export const taskService = {
     const response = await taskApi.getQuestionsByQuizId(quizId);
     return response.data;
   },
-  submitQuiz: async (quizId: string, answers: string[]) => {
+  submitQuiz: async (quizId: string, answers: QuizAnswer[]) => {
     const response = await taskApi.submitQuiz(quizId, answers);
     return response.data;
   },

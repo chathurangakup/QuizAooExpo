@@ -13,6 +13,7 @@ export const mapQuizToTask = (quiz: any): Task => ({
   estimatedTime: `${quiz.total_questions ?? 0} min`,
   createdAt: quiz.created_at ?? new Date().toISOString(),
   image_url: quiz.image_url,
+  isdisabled: quiz.isdisabled ?? false,
 });
 
 /* ---------- Single Quiz Mapper ---------- */

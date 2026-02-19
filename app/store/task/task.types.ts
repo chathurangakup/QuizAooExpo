@@ -14,6 +14,7 @@ export interface Task {
   estimatedTime: string;
   createdAt: string;
   image_url?: string;
+  isdisabled?: boolean;
 }
 
 /* ---------- Quiz Question ---------- */

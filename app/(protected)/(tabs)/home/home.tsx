@@ -60,22 +60,33 @@ export default function HomeScreen() {
   }
 
   function QuizCard({ item }: { item: any }) {
+    const isDisabled = item.isdisabled === true;
+
     return (
       <TouchableOpacity
-        style={styles.card}
-        activeOpacity={0.8}
-        onPress={() => router.push(`/home/quiz/${item.id}`)}
+        style={[styles.card, isDisabled && styles.disabledCard]}
+        activeOpacity={isDisabled ? 1 : 0.8}
+        onPress={() => !isDisabled && router.push(`/home/quiz/${item.id}`)}
+        disabled={isDisabled}
       >
         <Image
           source={{ uri: encodeURI(item.image_url) }}
-          style={styles.cardImage}
+          style={[styles.cardImage, isDisabled && styles.disabledImage]}
         />
-        <Text style={styles.cardTitle} numberOfLines={2}>
+        <Text
+          style={[styles.cardTitle, isDisabled && styles.disabledText]}
+          numberOfLines={2}
+        >
           {item.title}
         </Text>
-        <Text style={styles.cardSub}>
+        <Text style={[styles.cardSub, isDisabled && styles.disabledText]}>
           {item.estimatedTime} • {item.reward} coins
         </Text>
+        {isDisabled && (
+          <View style={styles.disabledOverlay}>
+            <Text style={styles.disabledLabel}>Submitted</Text>
+          </View>
+        )}
       </TouchableOpacity>
     );
   }
@@ -207,5 +218,40 @@ const styles = StyleSheet.create({
   cardSub: {
     color: "#6B7280",
     marginTop: 4,
+  },
+
+  disabledCard: {
+    opacity: 0.6,
+    backgroundColor: "#F3F4F6",
+  },
+
+  disabledImage: {
+    opacity: 0.5,
+  },
+
+  disabledText: {
+    color: "#9CA3AF",
+  },
+
+  disabledOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.01)",
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  disabledLabel: {
+    color: "white",
+    fontSize: 14,
+    fontWeight: "600",
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
   },
 });

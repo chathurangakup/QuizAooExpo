@@ -3,7 +3,7 @@ import axios from "axios";
 import { getToken } from "../utils/storage";
 
 const api = axios.create({
-  baseURL: "http://192.168.8.176:4000/api",
+  baseURL: "http://10.79.129.105:4000/api",
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
@@ -19,7 +19,7 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 // 🚫 Handle auth errors globally
@@ -31,7 +31,7 @@ api.interceptors.response.use(
       // optional: logout, clear storage, redirect
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export default api;

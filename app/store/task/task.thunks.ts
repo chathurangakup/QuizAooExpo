@@ -4,6 +4,11 @@ import { taskService } from "../../services/task.service";
 import { mapQuizToQuizTask, mapQuizToTask } from "./task.mappers";
 import { QuizSubmission, QuizTask, Task } from "./task.types";
 
+export type QuizAnswer = {
+  option_id: string;
+  user_submit_ans: string;
+};
+
 /* ---------- Fetch All Quizzes ---------- */
 export const fetchQuizzes = createAsyncThunk<
   Task[],
@@ -16,7 +21,7 @@ export const fetchQuizzes = createAsyncThunk<
     return data.quizzes?.map(mapQuizToTask) ?? [];
   } catch (error: any) {
     return rejectWithValue(
-      error?.response?.data?.message || "Failed to fetch quizzes"
+      error?.response?.data?.message || "Failed to fetch quizzes",
     );
   }
 });
@@ -37,19 +42,35 @@ export const fetchQuizById = createAsyncThunk<
 });
 
 export const submitQuiz = createAsyncThunk<
-  any, // you can type the response if needed
-  { quizId: string; answers: string[] },
+  any,
+  { quizId: string; answers: QuizAnswer[] },
   { rejectValue: string }
->("task/submitQuiz", async ({ quizId, answers }, { rejectWithValue }) => {
-  try {
-    const data = await taskService.submitQuiz(quizId, answers);
-    return data;
-  } catch (error: any) {
-    return rejectWithValue(
-      error?.response?.data?.message || "Failed to submit quiz"
-    );
+>(
+  "task/submitQuiz",
+  async ({ quizId, answers }, { rejectWithValue }) => {
+    try {
+
+      console.log("SUBMIT ARRAY:", answers);
+
+      // 🔥 send array directly
+      const data = await taskService.submitQuiz(
+        quizId,
+        answers
+      );
+
+      return data;
+
+    } catch (error: any) {
+
+      return rejectWithValue(
+        error?.response?.data?.message ||
+        "Failed to submit quiz"
+      );
+
+    }
   }
-});
+);
+
 
 export const fetchQuizSubmissions = createAsyncThunk<
   QuizSubmission[],
@@ -61,7 +82,7 @@ export const fetchQuizSubmissions = createAsyncThunk<
     return data.submissions; // 👈 matches API response
   } catch (error: any) {
     return rejectWithValue(
-      error?.response?.data?.message || "Failed to fetch quiz submissions"
+      error?.response?.data?.message || "Failed to fetch quiz submissions",
     );
   }
 });

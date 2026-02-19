@@ -19,38 +19,38 @@ import {
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 
+type QuizAnswer = {
+  option_id: string;
+  user_submit_ans: string;
+};
+
 export default function QuestionsScreen() {
   const { quizId } = useLocalSearchParams<{ quizId: string }>();
   const dispatch = useDispatch<any>();
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  const [modalTriggered, setModalTriggered] = useState(false); // ✅ prevent multiple triggers
-
   const selectedQuiz: QuizTask | null = useSelector(
-    (state: RootState) => state.task.selectedTask
+    (state: RootState) => state.task.selectedTask,
   );
-  const { selectedTask, loading } = useSelector(
-    (state: RootState) => state.task
-  );
+
+  const { loading } = useSelector((state: RootState) => state.task);
 
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedOption, setSelectedOption] = useState<string | null>(null);
-  const [answers, setAnswers] = useState<string[]>([]);
+  const [selectedOption, setSelectedOption] = useState<QuizAnswer | null>(null);
+  const [answers, setAnswers] = useState<QuizAnswer[]>([]);
 
-  // ✅ Fetch quiz
+  // FETCH QUIZ
   useEffect(() => {
     if (quizId) {
-      console.log("quizId", quizId);
       dispatch(fetchQuizById(quizId));
     }
-  }, [quizId, dispatch]);
+  }, [quizId]);
 
-  // ✅ Restore selected option when index OR answers change
+  // RESTORE ANSWER WHEN USER GO BACK
   useEffect(() => {
     setSelectedOption(answers[currentIndex] ?? null);
-  }, [currentIndex, answers]);
+  }, [currentIndex]);
 
-  // ✅ Safe guards AFTER hooks
   if (!selectedQuiz || !selectedQuiz.questions?.length) {
     return (
       <View style={[styles.screen, styles.center]}>
@@ -62,43 +62,42 @@ export default function QuestionsScreen() {
   const currentQuestion = selectedQuiz.questions[currentIndex];
   const isLastQuestion = currentIndex === selectedQuiz.questions.length - 1;
 
-  const handleSelectOption = (option: string) => {
-    setSelectedOption(option);
+  const handleSelectOption = (optionId: string, optionText: string) => {
+    setSelectedOption({
+      option_id: optionId,
+      user_submit_ans: optionText,
+    });
   };
 
   const handleNext = async () => {
     if (!selectedOption) return;
 
-    // Build updated answers immediately
     const updatedAnswers = [...answers];
     updatedAnswers[currentIndex] = selectedOption;
+
     setAnswers(updatedAnswers);
 
     if (!isLastQuestion) {
       setCurrentIndex((prev) => prev + 1);
       setSelectedOption(null);
     } else {
-      //if (modalTriggered) return; // prevent multiple triggers
-
       try {
-        console.log("updatedAns", updatedAnswers);
-        setShowSuccessModal(true);
+        console.log("FINAL API BODY", {
+          answers: updatedAnswers,
+        });
+
         const response = await dispatch(
-          submitQuiz({ quizId, answers: updatedAnswers })
+          submitQuiz({
+            quizId,
+            answers: updatedAnswers,
+          }),
         ).unwrap();
-
+        console.log("SUBMISSION RESPONSE", response);
         if (response?.message) {
-          // ✅ Show success modal
-
           setShowSuccessModal(true);
-
-          console.log("Quiz submitted successfully:", response);
-          // Optional iOS safety delay
         }
-      } catch (error: any) {
+      } catch (error) {
         console.error("Submit quiz failed:", error);
-      } finally {
-        //setSubmitting(false);
       }
     }
   };
@@ -108,34 +107,32 @@ export default function QuestionsScreen() {
       setCurrentIndex((prev) => prev - 1);
     }
   };
+  console.log("CURRENT QUESTION", currentQuestion);
 
   return (
     <View style={styles.screen}>
-      <View>
-        <AppModal
-          image={images.success}
-          bgImage={images.bgsuccess}
-          visible={showSuccessModal}
-          title="Successful 🎉"
-          description="Please wait a moment, we are preparing for you..."
-          buttonText="Back to Home"
-          onClose={() => setShowSuccessModal(false)} // ✅ properly closes modal
-          onPress={() => {
-            setShowSuccessModal(false);
-            router.replace("/(protected)/(tabs)/home/home"); // ✅ back to home
-          }}
-        />
-      </View>
+      <AppModal
+        image={images.success}
+        bgImage={images.bgsuccess}
+        visible={showSuccessModal}
+        title="Successful 🎉"
+        description="Please wait a moment, we are preparing for you..."
+        buttonText="Back to Home"
+        onClose={() => setShowSuccessModal(false)}
+        onPress={() => {
+          setShowSuccessModal(false);
+          router.replace("/(protected)/(tabs)/home/home");
+        }}
+      />
 
       <Header title="Questions" onBack={() => router.back()} hideProgress />
+
       <LottieLoader visible={loading} />
-      <Text>{showSuccessModal}</Text>
-      {/* Counter */}
 
       <Text style={styles.counter}>
-        Question {currentIndex + 1} of {selectedQuiz.questions.length}{" "}
-        {showSuccessModal.toString()}
+        Question {currentIndex + 1} of {selectedQuiz.questions.length}
       </Text>
+
       <View style={{ justifyContent: "center", alignItems: "center" }}>
         <Image
           source={images.loginWrite}
@@ -144,7 +141,6 @@ export default function QuestionsScreen() {
         />
       </View>
 
-      {/* Progress */}
       <View style={{ paddingHorizontal: 20, marginTop: 8 }}>
         <ProgressBar
           progress={(currentIndex + 1) / selectedQuiz.questions.length}
@@ -153,16 +149,15 @@ export default function QuestionsScreen() {
         />
       </View>
 
-      {/* White Layer */}
       <View style={styles.whiteLayer}>
         <ScrollView showsVerticalScrollIndicator={false}>
           <Text style={styles.question}>
-            <Text style={styles.questionNumber}>{currentIndex + 1}. </Text>
+            <Text style={styles.questionNumber}>{currentIndex + 1}.</Text>
             {currentQuestion.question}
           </Text>
 
-          {currentQuestion.options.map((option: string, idx: number) => {
-            const isSelected = selectedOption === option;
+          {currentQuestion.options.map((option: any, idx: number) => {
+            const isSelected = selectedOption?.option_id === option.id;
 
             return (
               <View
@@ -177,10 +172,10 @@ export default function QuestionsScreen() {
                 >
                   {idx + 1}.
                 </Text>
+
                 <TouchableOpacity
-                  key={idx}
                   style={[styles.option, isSelected && styles.selectedOption]}
-                  onPress={() => handleSelectOption(option)}
+                  onPress={() => handleSelectOption(currentQuestion.id, option)}
                 >
                   <Text
                     style={[
@@ -196,7 +191,6 @@ export default function QuestionsScreen() {
           })}
         </ScrollView>
 
-        {/* Bottom Bar */}
         <View style={styles.bottomBar}>
           <TouchableOpacity
             onPress={handlePrevious}
@@ -205,27 +199,14 @@ export default function QuestionsScreen() {
             <Text style={styles.arrow}>⬅</Text>
           </TouchableOpacity>
 
-          {/* <TouchableOpacity
+          <PrimaryButton
+            title={isLastQuestion ? "Submit" : "Next"}
+            onPress={handleNext}
             style={[styles.nextButton, !selectedOption && styles.nextDisabled]}
             disabled={!selectedOption}
-            onPress={handleNext}
-          >
-            <Text style={styles.nextText}>
-              {isLastQuestion ? "Submit" : "Next"}
-            </Text>
-          </TouchableOpacity> */}
-          <View>
-            <PrimaryButton
-              title={isLastQuestion ? "Submit" : "Next"}
-              onPress={handleNext}
-              style={[
-                styles.nextButton,
-                !selectedOption && styles.nextDisabled,
-              ]}
-              disabled={!selectedOption}
-              variant="secondary"
-            />
-          </View>
+            variant="secondary"
+          />
+
           <TouchableOpacity onPress={handleNext} disabled={!selectedOption}>
             <Text style={styles.arrow}>➡</Text>
           </TouchableOpacity>
@@ -345,6 +326,8 @@ const styles = StyleSheet.create({
   },
 
   selectedText: {
-    color: "#2563EB",
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#000", // 👈 black text always
   },
 });

@@ -1,7 +1,10 @@
 import PrimaryButton from "@/components/common/PrimaryButton";
 import StatusBadge from "@/components/common/StatusBadge";
 import * as ImagePicker from "expo-image-picker";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+// import { useAppDispatch } from "../store/hooks";
+import { createKycRequestThunk, getMyKycThunk } from "../store/kyc/kyc.thunk";
+
 // import { storage } from "../config/firebase";
 
 import { router } from "expo-router";
@@ -14,9 +17,15 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useDispatch, useSelector } from "react-redux";
 import { supabase } from "../config/superbase";
 
+import { mapIdTypeToDocumentType } from "../store/kyc/kyc.mappers";
+import { RootState } from "../store/rootReducer";
+
 export default function KYCScreen() {
+  const dispatch = useDispatch<any>();
+  const { data, loading } = useSelector((state: RootState) => state.kyc);
   const [kycStatus, setKycStatus] = useState<
     "pending" | "verified" | "rejected"
   >("pending");
@@ -27,8 +36,7 @@ export default function KYCScreen() {
   const [selfie, setSelfie] = useState<string | null>(null);
   const [address, setAddress] = useState("");
 
-  const canStartVerification =
-    !!idType && !!idFront && !!idBack && !!selfie && address.trim().length > 5;
+  const canStartVerification = !!idType && address.trim().length > 5;
 
   const kycSteps = [
     { id: 1, title: "ID Verification", completed: false },
@@ -45,6 +53,7 @@ export default function KYCScreen() {
       .upload(path, blob, {
         cacheControl: "3600",
         upsert: true,
+
         contentType: "image/jpeg",
       });
 
@@ -57,92 +66,55 @@ export default function KYCScreen() {
     return publicData.publicUrl; // ✅ public URL
   };
 
+  useEffect(() => {
+    dispatch(getMyKycThunk());
+  }, []);
+
+  useEffect(() => {
+    if (!loading && data?.hasKyc) {
+      router.replace("/(protected)/(tabs)/home/home");
+    }
+  }, [data, loading]);
+
   const handleStartKYC = async () => {
-    if (!idFront || !idBack || !selfie || !idType || !address) return;
-    console.log(
-      "Starting KYC submission...",
-      idBack,
+    console.log("Preparing to start KYC...", {
       idFront,
+      idBack,
       selfie,
       address,
-      idType
-    );
+      idType,
+    });
+    if (!idType || !address) return;
+
     try {
-      // Upload images
-      const frontUrl = await uploadImage(idFront, `${idType}_front.jpeg`);
-      const backUrl = await uploadImage(idBack, `${idType}_back.jpeg`);
-      const selfieUrl = await uploadImage(selfie, `selfie.jpeg`);
+      // 🔥 Upload Images First
+      // const frontUrl = await uploadImage(idFront, `${idType}_front.jpeg`);
+      // const backUrl = await uploadImage(idBack, `${idType}_back.jpeg`);
+      // const selfieUrl = await uploadImage(selfie, `selfie.jpeg`);
+
       const body = {
-        user_id: "18bc89c0-b23a-40fc-9fbf-04ba64c0d9d5",
-        document_type: idType.toUpperCase(),
-        document_image_front_url: frontUrl,
-        document_image_back_url: backUrl,
-        selfie_image_url: selfieUrl,
-        status: "PENDING",
+        document_type: mapIdTypeToDocumentType(idType),
+
+        document_number: "A12345678", // 🔥 you must pass this
+        document_image_front_url: "https://example.com/document.jpg",
+        document_image_back_url: "https://example.com/document.jpg",
+        selfie_image_url: "https://example.com/selfie.jpg",
+        status: "PENDING" as const,
         address,
         review_note: "Initial submission",
       };
 
-      console.log(body);
+      console.log("Dispatching KYC Request:", body);
 
-      // Send to your backend API:
-      // await fetch("https://your-api", {...})
-    } catch (e) {
-      console.error(e);
-      alert("Upload failed");
+      // 🚀 CALL REDUX THUNK HERE
+      await dispatch(createKycRequestThunk(body)).unwrap();
+
+      alert("KYC Submitted Successfully!");
+    } catch (error: any) {
+      console.error(error);
+      alert(error || "Upload failed");
     }
   };
-
-  // const handleStartKYC = async () => {
-  //   if (!idFront || !idBack || !selfie || !address || !idType) return;
-
-  //   try {
-  //     console.log("Starting KYC...");
-
-  //     // Helper function to upload an image and get its public URL
-  //     const uploadImage = async (uri: string, filename: string) => {
-  //       const response = await fetch(uri); // fetch the file from local URI
-  //       const blob = await response.blob(); // convert to blob for firebase
-  //       const storageRef = ref(storage, `kyc/${filename}`);
-  //       const uploadTask = await uploadBytesResumable(storageRef, blob);
-  //       const url = await getDownloadURL(uploadTask.ref);
-  //       return url;
-  //     };
-
-  //     // Upload images concurrently
-  //     const [frontUrl, backUrl, selfieUrl] = await Promise.all([
-  //       uploadImage(idFront, `${idType}_front_${Date.now()}`),
-  //       uploadImage(idBack, `${idType}_back_${Date.now()}`),
-  //       uploadImage(selfie, `selfie_${Date.now()}`),
-  //     ]);
-
-  //     // Build the JSON object
-  //     const kycData = {
-  //       user_id: "18bc89c0-b23a-40fc-9fbf-04ba64c0d9d5", // replace with dynamic user ID
-  //       document_type: idType.toUpperCase(), // NATIONAL_ID or PASSPORT
-  //       document_image_front_url: frontUrl,
-  //       document_image_back_url: backUrl,
-  //       selfie_image_url: selfieUrl,
-  //       status: "PENDING",
-  //       address: address.trim(),
-  //       review_note: "Initial submission",
-  //     };
-
-  //     console.log("KYC Object:", kycData);
-
-  //     // TODO: send kycData to your backend API
-  //     // await fetch("https://your-api.com/kyc", {
-  //     //   method: "POST",
-  //     //   headers: { "Content-Type": "application/json" },
-  //     //   body: JSON.stringify(kycData),
-  //     // });
-
-  //     setKycStatus("verified"); // optional, if you want immediate UI feedback
-  //   } catch (error) {
-  //     console.error("KYC Upload Error:", error);
-  //     alert("Failed to upload images. Please try again.");
-  //   }
-  // };
 
   const openCamera = async (onSuccess: (uri: string) => void) => {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
@@ -192,29 +164,6 @@ export default function KYCScreen() {
         </View>
 
         <View style={styles.stepsContainer}>
-          {/* {kycSteps.map((step) => (
-            <View key={step.id} style={styles.stepRow}>
-              <View
-                style={[
-                  styles.stepCircle,
-                  step.completed && styles.stepCircleCompleted,
-                ]}
-              >
-                {step.completed ? (
-                  <Text style={styles.stepCheck}>✓</Text>
-                ) : (
-                  <Text style={styles.stepNumber}>{step.id}</Text>
-                )}
-              </View>
-
-              <Text style={styles.stepTitle}>{step.title}</Text>
-
-              {step.completed && (
-                <Text style={styles.stepCompletedText}>Completed</Text>
-              )}
-            </View>
-          ))} */}
-          {/* ID Type Selection */}
           <Text style={styles.sectionTitle}>ID Verification</Text>
 
           <View style={styles.idTypeRow}>

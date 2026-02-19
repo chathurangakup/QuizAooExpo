@@ -18,6 +18,7 @@
       "bundleIdentifier": "com.upctechhub.quizbot"
     },
     "android": {
+      "permissions": ["CAMERA", "READ_MEDIA_IMAGES"],
       "adaptiveIcon": {
         // "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#6366F1"

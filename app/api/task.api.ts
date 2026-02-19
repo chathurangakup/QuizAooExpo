@@ -1,8 +1,9 @@
 import api from "../services/api";
+import { QuizAnswer } from "../store/task/task.thunks";
 
 export const taskApi = {
   getAllQuiz: (difficulty?: "EASY" | "MEDIUM" | "HARD") => {
-    return api.get("/quiz/all", {
+    return api.get("/quiz/all/user/", {
       params: {
         difficulty,
       },
@@ -12,8 +13,8 @@ export const taskApi = {
     return api.get(`/qoptions/quiz/${quizId}`);
   },
 
-  submitQuiz: (quizId: string, answers: string[]) => {
-    return api.post(`/submitquiz/${quizId}/submit`, { answers });
+  submitQuiz: (quizId: string, answers: QuizAnswer[]) => {
+    return api.post(`/submitquiz/${quizId}/submit`, [answers]);
   },
 
   getQuizSubmissions: () => {
