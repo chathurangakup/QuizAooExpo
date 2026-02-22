@@ -5,7 +5,9 @@ import {
 } from "@/app/store/wallet/wallet.thunk";
 import BalanceCard from "@/components/wallet/BalanceCard";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useEffect } from "react";
+import { LinearGradient } from "expo-linear-gradient";
+import { useFocusEffect } from "expo-router";
+import React, { useCallback } from "react";
 import {
   FlatList,
   ScrollView,
@@ -20,13 +22,15 @@ const WalletScreen = () => {
   const dispatch = useDispatch<any>();
 
   const { wallet, transactions, loading } = useSelector(
-    (state: RootState) => state.wallet
+    (state: RootState) => state.wallet,
   );
-  useEffect(() => {
-    dispatch(fetchWallet());
-    dispatch(fetchWalletTransactions());
-  }, []);
 
+  useFocusEffect(
+    useCallback(() => {
+      dispatch(fetchWallet());
+      dispatch(fetchWalletTransactions());
+    }, []),
+  );
   if (loading) {
     return (
       <View style={styles.center}>
@@ -35,13 +39,13 @@ const WalletScreen = () => {
     );
   }
 
-  if (!wallet) {
-    return (
-      <View style={styles.center}>
-        <Text>No wallet data</Text>
-      </View>
-    );
-  }
+  // if (!wallet) {
+  //   return (
+  //     <View style={styles.center}>
+  //       <Text>No wallet data</Text>
+  //     </View>
+  //   );
+  // }
 
   const quickActions = [
     { id: 1, icon: "arrow-up-circle", title: "Withdraw", color: "#10B981" },
@@ -49,100 +53,120 @@ const WalletScreen = () => {
     { id: 3, icon: "repeat", title: "Transfer", color: "#F59E0B" },
     { id: 4, icon: "receipt", title: "History", color: "#EF4444" },
   ];
+
+  const safeWallet = {
+    totalEarnings: wallet?.totalEarnings ?? 0,
+    todayEarnings: wallet?.todayEarnings ?? 0,
+    availableToWithdraw: wallet?.availableToWithdraw ?? 0,
+  };
+
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.sectionMainTitle}>Wallet</Text>
-      <View style={styles.content}>
-        <BalanceCard
-          totalBalance={wallet.totalEarnings}
-          todayEarnings={wallet.todayEarnings}
-          availableToWithdraw={wallet.availableToWithdraw}
-        />
+      <LinearGradient
+        colors={["#1C58F2", "#6495ED", "#FFFFFF"]} // Blue -> Light Blue -> White
+        style={styles.container1}
+      >
+        <Text style={styles.sectionMainTitle}>Wallet</Text>
+        <View style={styles.content}>
+          <BalanceCard
+            totalBalance={safeWallet.totalEarnings}
+            todayEarnings={safeWallet.todayEarnings}
+            availableToWithdraw={safeWallet.availableToWithdraw}
+          />
 
-        <Text style={styles.sectionTitle}>Quick Actions</Text>
-        <View style={styles.quickActions}>
-          {quickActions.map((action) => (
-            <TouchableOpacity key={action.id} style={styles.actionButton}>
-              <View
-                style={[
-                  styles.actionIcon,
-                  { backgroundColor: `${action.color}15` },
-                ]}
-              >
-                <Ionicons
-                  name={action.icon as any}
-                  size={24}
-                  color={action.color}
-                />
-              </View>
-              <Text style={styles.actionTitle}>{action.title}</Text>
+          <Text style={styles.sectionTitle}>Quick Actions</Text>
+          <View style={styles.quickActions}>
+            {quickActions.map((action) => (
+              <TouchableOpacity key={action.id} style={styles.actionButton}>
+                <View
+                  style={[
+                    styles.actionIcon,
+                    { backgroundColor: `${action.color}15` },
+                  ]}
+                >
+                  <Ionicons
+                    name={action.icon as any}
+                    size={24}
+                    color={action.color}
+                  />
+                </View>
+                <Text style={styles.actionTitle}>{action.title}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Recent Transactions</Text>
+            <TouchableOpacity>
+              <Text style={styles.seeAll}>See All</Text>
             </TouchableOpacity>
-          ))}
-        </View>
+          </View>
+          <View style={styles.transactionsList}>
+            {transactions.length === 0 ? (
+              <View style={styles.center}>
+                <Text>No transactions yet</Text>
+              </View>
+            ) : (
+              <FlatList
+                data={transactions.slice(0, 5)}
+                keyExtractor={(item) => item.id}
+                scrollEnabled={false}
+                renderItem={({ item }) => {
+                  const isCredit = item.type === "QUIZ_REWARD";
 
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Recent Transactions</Text>
-          <TouchableOpacity>
-            <Text style={styles.seeAll}>See All</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.transactionsList}>
-          <FlatList
-            data={transactions.slice(0, 5)}
-            keyExtractor={(item) => item.id}
-            scrollEnabled={false}
-            renderItem={({ item }) => {
-              const isCredit = item.type === "QUIZ_REWARD";
+                  return (
+                    <View style={styles.transactionItem}>
+                      <View style={styles.transactionInfo}>
+                        <View
+                          style={[
+                            styles.transactionIcon,
+                            {
+                              backgroundColor: isCredit ? "#ECFDF5" : "#FEF2F2",
+                            },
+                          ]}
+                        >
+                          <Ionicons
+                            name={isCredit ? "arrow-down" : "arrow-up"}
+                            size={20}
+                            color={isCredit ? "#10B981" : "#EF4444"}
+                          />
+                        </View>
 
-              return (
-                <View style={styles.transactionItem}>
-                  <View style={styles.transactionInfo}>
-                    <View
-                      style={[
-                        styles.transactionIcon,
-                        {
-                          backgroundColor: isCredit ? "#ECFDF5" : "#FEF2F2",
-                        },
-                      ]}
-                    >
-                      <Ionicons
-                        name={isCredit ? "arrow-down" : "arrow-up"}
-                        size={20}
-                        color={isCredit ? "#10B981" : "#EF4444"}
-                      />
-                    </View>
+                        <View>
+                          <Text style={styles.transactionTitle}>
+                            Quiz Reward
+                          </Text>
+                          <Text style={styles.transactionDate}>
+                            {new Date(item.createdAt).toLocaleDateString()}
+                          </Text>
+                        </View>
+                      </View>
 
-                    <View>
-                      <Text style={styles.transactionTitle}>Quiz Reward</Text>
-                      <Text style={styles.transactionDate}>
-                        {new Date(item.createdAt).toLocaleDateString()}
+                      <Text
+                        style={[
+                          styles.transactionAmount,
+                          { color: isCredit ? "#10B981" : "#EF4444" },
+                        ]}
+                      >
+                        +${item.amount.toFixed(2)}
                       </Text>
                     </View>
-                  </View>
-
-                  <Text
-                    style={[
-                      styles.transactionAmount,
-                      { color: isCredit ? "#10B981" : "#EF4444" },
-                    ]}
-                  >
-                    +${item.amount.toFixed(2)}
-                  </Text>
-                </View>
-              );
-            }}
-            ItemSeparatorComponent={() => (
-              <View
-                style={{
-                  height: 1,
-                  backgroundColor: "#F3F4F6",
-                  marginVertical: 8,
+                  );
                 }}
+                ItemSeparatorComponent={() => (
+                  <View
+                    style={{
+                      height: 1,
+                      backgroundColor: "#F3F4F6",
+                      marginVertical: 8,
+                    }}
+                  />
+                )}
               />
             )}
-          />
+          </View>
         </View>
-      </View>
+      </LinearGradient>
     </ScrollView>
   );
 };
@@ -150,16 +174,17 @@ const WalletScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: "#1C58F2",
     paddingTop: 40,
   },
+  container1: { paddingBottom: 10 },
   content: {
     padding: 16,
   },
   sectionTitle: {
     fontSize: 20,
     fontWeight: "600",
-    color: "#1F2937",
+    color: "#fff",
     marginTop: 24,
     marginBottom: 16,
   },
@@ -173,7 +198,7 @@ const styles = StyleSheet.create({
   sectionMainTitle: {
     fontSize: 25,
     fontWeight: "600",
-    color: "#1F2937",
+    color: "white",
     marginTop: 24,
     marginBottom: 16,
     paddingLeft: 30,
@@ -185,6 +210,9 @@ const styles = StyleSheet.create({
   quickActions: {
     flexDirection: "row",
     justifyContent: "space-between",
+    backgroundColor: "white",
+    borderRadius: 12,
+    padding: 16,
   },
   actionButton: {
     alignItems: "center",
@@ -206,6 +234,7 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     borderRadius: 12,
     padding: 16,
+    marginBottom: 204,
   },
   transactionItem: {
     flexDirection: "row",

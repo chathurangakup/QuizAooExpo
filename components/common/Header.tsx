@@ -1,49 +1,68 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import React, { useEffect, useRef } from "react"; // Added useEffect and useRef
+import {
+  Animated,
+  Image,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { colors } from "../../app/theme/colors";
 
 interface HeaderProps {
   progress?: number;
   onBack: () => void;
   hideProgress?: boolean;
-
-  title?: string; // ← add this
-  avatarUrl?: string; // ← add this
+  title?: string;
+  avatarUrl?: string;
 }
 
 export default function Header({
-  progress,
+  progress = 0, // Default to 0
   onBack,
   hideProgress,
   title,
   avatarUrl,
 }: HeaderProps) {
+  // 1. Initialize the animated value
+  const animatedProgress = useRef(new Animated.Value(progress)).current;
+
+  // 2. Animate when the progress prop changes
+  useEffect(() => {
+    Animated.timing(animatedProgress, {
+      toValue: progress,
+      duration: 1000, // Speed of the animation in ms
+      useNativeDriver: false, // Width doesn't support native driver
+    }).start();
+  }, [progress]);
+
+  // 3. Interpolate the value to a percentage string
+  const widthInterpolation = animatedProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0%", "100%"],
+  });
+
   return (
     <View style={styles.container}>
-      {/* Left: Arrow + Title */}
       <View style={styles.left}>
         <Pressable onPress={onBack} hitSlop={10}>
           <Ionicons name="arrow-back" size={24} color={colors.text.inverse} />
         </Pressable>
-
         {title && <Text style={styles.title}>{title}</Text>}
       </View>
 
-      {/* Progress (unchanged) */}
-      {hideProgress ? null : (
+      {!hideProgress && (
         <View style={styles.progressWrapper}>
           <View style={styles.progressBackground}>
-            <View
-              style={[
-                styles.progressFill,
-                { width: `${Math.min((progress ?? 0) * 100, 100)}%` },
-              ]}
+            {/* 4. Use Animated.View instead of View */}
+            <Animated.View
+              style={[styles.progressFill, { width: widthInterpolation }]}
             />
           </View>
         </View>
       )}
 
-      {/* Right: Profile Icon */}
       {avatarUrl ? (
         <Image source={{ uri: avatarUrl }} style={styles.avatar} />
       ) : (
@@ -54,6 +73,8 @@ export default function Header({
     </View>
   );
 }
+
+// ... styles remain the same
 
 const styles = StyleSheet.create({
   container: {

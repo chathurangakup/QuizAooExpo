@@ -1,7 +1,9 @@
 import { RootState } from "@/app/store/rootReducer";
 import { fetchQuizSubmissions } from "@/app/store/task/task.thunks";
 import { images } from "@/constants/images";
-import { useEffect, useState } from "react";
+import { LinearGradient } from "expo-linear-gradient";
+import { useFocusEffect } from "expo-router";
+import { useCallback, useState } from "react";
 import {
   Image,
   ScrollView,
@@ -21,12 +23,16 @@ export default function HistoryScreen() {
   const dispatch = useDispatch<any>();
 
   const { submissions, loading } = useSelector(
-    (state: RootState) => state.task
+    (state: RootState) => state.task,
   );
 
-  useEffect(() => {
-    dispatch(fetchQuizSubmissions());
-  }, []);
+  console.log("Quiz Submissions in History:", submissions);
+
+  useFocusEffect(
+    useCallback(() => {
+      dispatch(fetchQuizSubmissions());
+    }, []),
+  );
 
   if (loading) return null;
 
@@ -52,35 +58,39 @@ export default function HistoryScreen() {
 
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.title}>Activity History</Text>
+      <LinearGradient
+        colors={["#1C58F2", "#6495ED", "#FFFFFF"]} // Blue -> Light Blue -> White
+        style={styles.container1}
+      >
+        <View style={styles.content}>
+          <Text style={styles.title}>Activity History</Text>
 
-        <View style={styles.tabContainer}>
-          {tabs.map((tab) => (
-            <TouchableOpacity
-              key={tab.id}
-              style={[styles.tab, activeTab === tab.id && styles.activeTab]}
-              onPress={() => setActiveTab(tab.id as any)}
-            >
-              <Text
-                style={[
-                  styles.tabText,
-                  activeTab === tab.id && styles.activeTabText,
-                ]}
+          <View style={styles.tabContainer}>
+            {tabs.map((tab) => (
+              <TouchableOpacity
+                key={tab.id}
+                style={[styles.tab, activeTab === tab.id && styles.activeTab]}
+                onPress={() => setActiveTab(tab.id as any)}
               >
-                {tab.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-        <View style={{ flex: 1, alignItems: "center" }}>
-          <Image
-            source={images.searchBot}
-            style={styles.image}
-            resizeMode="contain"
-          />
-        </View>
-        {/* <View style={styles.statsContainer}>
+                <Text
+                  style={[
+                    styles.tabText,
+                    activeTab === tab.id && styles.activeTabText,
+                  ]}
+                >
+                  {tab.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <View style={{ flex: 1, alignItems: "center" }}>
+            <Image
+              source={images.searchBot}
+              style={styles.image}
+              resizeMode="contain"
+            />
+          </View>
+          {/* <View style={styles.statsContainer}>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{tasks.length}</Text>
             <Text style={styles.statLabel}>Total Tasks</Text>
@@ -101,7 +111,7 @@ export default function HistoryScreen() {
             <Text style={styles.statLabel}>Completed</Text>
           </View>
         </View> */}
-        {/* <View style={styles.historyList}>
+          {/* <View style={styles.historyList}>
           <Text style={styles.sectionTitle}>Recent Activities</Text>
           {filteredTasks.slice(0, 10).map((task) => (
             <View key={task.id} style={styles.historyItem}>
@@ -149,72 +159,73 @@ export default function HistoryScreen() {
             </View>
           ))}
         </View> */}
-        <View style={styles.historyList}>
-          <Text style={styles.sectionTitle}>Recent Activities</Text>
+          <View style={styles.historyList}>
+            <Text style={styles.sectionTitle}>Recent Activities</Text>
 
-          {filteredSubmissions.length === 0 ? (
-            <Text
-              style={{ color: "#6B7280", textAlign: "center", marginTop: 12 }}
-            >
-              No records found
-            </Text>
-          ) : (
-            filteredSubmissions.map((item) => (
-              <View key={item.id} style={styles.historyItem}>
-                {/* Left */}
-                <View style={styles.taskInfo}>
-                  <View style={styles.taskIcon}>
-                    <Text style={styles.taskIconText}>📝</Text>
+            {filteredSubmissions.length === 0 ? (
+              <Text
+                style={{ color: "#6B7280", textAlign: "center", marginTop: 12 }}
+              >
+                No records found
+              </Text>
+            ) : (
+              filteredSubmissions.map((item) => (
+                <View key={item.id} style={styles.historyItem}>
+                  {/* Left */}
+                  <View style={styles.taskInfo}>
+                    <View style={styles.taskIcon}>
+                      <Text style={styles.taskIconText}>📝</Text>
+                    </View>
+                    <View style={{ flex: 0.7 }}>
+                      <Text style={styles.taskTitle}>{item.quiz_title}</Text>
+                      <Text style={styles.taskDate}>
+                        {new Date(item.submitted_at).toLocaleDateString()}
+                      </Text>
+                    </View>
                   </View>
-                  <View>
-                    <Text style={styles.taskTitle}>{item.quiz_title}</Text>
-                    <Text style={styles.taskDate}>
-                      {new Date(item.submitted_at).toLocaleDateString()}
-                    </Text>
-                  </View>
-                </View>
 
-                {/* Right */}
-                <View style={styles.taskStatus}>
-                  <View
-                    style={[
-                      styles.statusBadge,
-                      {
-                        backgroundColor:
-                          item.quiz_status === "COMPLETED"
-                            ? "#ECFDF5"
-                            : item.quiz_status === "PROCESSING"
-                            ? "#FEF3C7"
-                            : "#E0E7FF",
-                      },
-                    ]}
-                  >
-                    <Text
+                  {/* Right */}
+                  <View style={styles.taskStatus}>
+                    <View
                       style={[
-                        styles.statusText,
+                        styles.statusBadge,
                         {
-                          color:
+                          backgroundColor:
                             item.quiz_status === "COMPLETED"
-                              ? "#065F46"
+                              ? "#ECFDF5"
                               : item.quiz_status === "PROCESSING"
-                              ? "#92400E"
-                              : "#3730A3",
+                                ? "#FEF3C7"
+                                : "#E0E7FF",
                         },
                       ]}
                     >
-                      {item.quiz_status}
+                      <Text
+                        style={[
+                          styles.statusText,
+                          {
+                            color:
+                              item.quiz_status === "COMPLETED"
+                                ? "#065F46"
+                                : item.quiz_status === "PROCESSING"
+                                  ? "#92400E"
+                                  : "#3730A3",
+                          },
+                        ]}
+                      >
+                        {item.quiz_status}
+                      </Text>
+                    </View>
+
+                    <Text style={styles.taskReward}>
+                      {item.score}/{item.total_questions}
                     </Text>
                   </View>
-
-                  <Text style={styles.taskReward}>
-                    {item.score}/{item.total_questions}
-                  </Text>
                 </View>
-              </View>
-            ))
-          )}
+              ))
+            )}
+          </View>
         </View>
-      </View>
+      </LinearGradient>
     </ScrollView>
   );
 }
@@ -222,7 +233,7 @@ export default function HistoryScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: "#1C58F2",
     paddingTop: 40,
   },
   image: {
@@ -230,14 +241,14 @@ const styles = StyleSheet.create({
     height: 200,
     marginBottom: 16,
   },
-
+  container1: { paddingBottom: 10 },
   content: {
     padding: 16,
   },
   title: {
     fontSize: 28,
     fontWeight: "bold",
-    color: "#1F2937",
+    color: "#fff",
     marginBottom: 24,
   },
   tabContainer: {
@@ -291,6 +302,7 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     borderRadius: 12,
     padding: 16,
+    marginBottom: 600,
   },
   sectionTitle: {
     fontSize: 18,
@@ -326,6 +338,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "500",
     color: "#1F2937",
+    flex: 1,
   },
   taskDate: {
     fontSize: 14,

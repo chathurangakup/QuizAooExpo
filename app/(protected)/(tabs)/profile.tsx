@@ -2,7 +2,13 @@ import { RootState } from "@/app/store/rootReducer";
 import { removeToken } from "@/app/utils/storage";
 import { images } from "@/constants/images";
 import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect } from "@react-navigation/native";
+import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+// import { useAppDispatch } from "@/app/store/hooks";
+
+import { fetchProfile } from "@/app/store/auth.slice";
+import { useCallback } from "react";
 import {
   Image,
   ScrollView,
@@ -11,11 +17,11 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 export default function ProfileScreen() {
-  const user = useSelector((state: RootState) => state.auth.user);
-
+  // const user = useSelector((state: RootState) => state.auth.user);
+  const dispatch = useDispatch<any>();
   const menuItems = [
     { icon: "person", label: "Edit Profile", color: "#6366F1" },
     { icon: "shield-checkmark", label: "Privacy & Security", color: "#10B981" },
@@ -25,11 +31,37 @@ export default function ProfileScreen() {
     { icon: "settings", label: "Settings", color: "#6B7280" },
   ];
 
+  const { user, wallet, quizStats } = useSelector(
+    (state: RootState) => state.auth,
+  );
+
+  console.log("User in Profile:", user);
+  const profile = user;
+
+  const statsData = quizStats;
+  useFocusEffect(
+    useCallback(() => {
+      dispatch(fetchProfile());
+    }, []),
+  );
+
   const stats = [
-    { label: "Tasks Completed", value: "24" },
-    { label: "Total Earnings", value: "$156.80" },
-    { label: "Current Streak", value: "7 days" },
-    { label: "Rating", value: "4.8" },
+    {
+      label: "Submitted Quizzes",
+      value: statsData?.submitted_quizzes || 0,
+    },
+    {
+      label: "Total Earnings",
+      value: `$${wallet?.total_earnings || 0}`,
+    },
+    {
+      label: "Active Days",
+      value: statsData?.active_days || 0,
+    },
+    {
+      label: "Rating",
+      value: statsData?.rating || 0,
+    },
   ];
 
   const handleLogout = () => {
@@ -37,61 +69,91 @@ export default function ProfileScreen() {
     router.replace("/(public)/login");
   };
 
+  const isVerified = profile?.kyc_status === "APPROVED";
+
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.content}>
-        <View style={styles.profileHeader}>
-          <Image source={images.profile} style={styles.profileImage} />
-          <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>{user?.name || "John Doe"}</Text>
-            <Text style={styles.profileEmail}>
-              {user?.email || "john.doe@example.com"}
-            </Text>
-            <View style={styles.verificationBadge}>
-              <Ionicons name="checkmark-circle" size={16} color="#10B981" />
-              <Text style={styles.verificationText}>Verified</Text>
+      <LinearGradient
+        colors={["#1C58F2", "#6495ED", "#FFFFFF"]} // Blue -> Light Blue -> White
+        style={styles.container1}
+      >
+        <View style={styles.content}>
+          <View style={styles.content}>
+            <View style={styles.profileHeader}>
+              <Image source={images.profile} style={styles.profileImage} />
+
+              <View style={styles.profileInfo}>
+                <Text style={styles.profileName}>
+                  {profile?.name || "John Doe"}
+                </Text>
+
+                <Text style={styles.profileEmail}>
+                  {profile?.email || "john.doe@example.com"}
+                </Text>
+
+                {/* 🔥 KYC STATUS */}
+                <View style={styles.verificationBadge}>
+                  <Ionicons
+                    name={isVerified ? "checkmark-circle" : "time-outline"}
+                    size={16}
+                    color={isVerified ? "#10B981" : "#F59E0B"}
+                  />
+
+                  <Text
+                    style={[
+                      styles.verificationText,
+                      {
+                        color: isVerified ? "#10B981" : "#F59E0B",
+                      },
+                    ]}
+                  >
+                    {isVerified ? "Verified" : "Pending"}
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            {/* 🔥 REAL STATS */}
+            <View style={styles.statsGrid}>
+              {stats.map((stat, index) => (
+                <View key={index} style={styles.statItem}>
+                  <Text style={styles.statValue}>{stat.value}</Text>
+                  <Text style={styles.statLabel}>{stat.label}</Text>
+                </View>
+              ))}
+            </View>
+
+            <View style={styles.menuSection}>
+              <Text style={styles.sectionTitle}>Account</Text>
+              {menuItems.map((item, index) => (
+                <TouchableOpacity key={index} style={styles.menuItem}>
+                  <View
+                    style={[
+                      styles.menuIcon,
+                      { backgroundColor: `${item.color}15` },
+                    ]}
+                  >
+                    <Ionicons
+                      name={item.icon as any}
+                      size={24}
+                      color={item.color}
+                    />
+                  </View>
+                  <Text style={styles.menuLabel}>{item.label}</Text>
+                  <Ionicons name="chevron-forward" size={20} color="#D1D5DB" />
+                </TouchableOpacity>
+              ))}
             </View>
           </View>
+
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Ionicons name="log-out" size={24} color="#EF4444" />
+            <Text style={styles.logoutText}>Log Out</Text>
+          </TouchableOpacity>
+
+          <Text style={styles.version}>Version 1.0.0</Text>
         </View>
-
-        <View style={styles.statsGrid}>
-          {stats.map((stat, index) => (
-            <View key={index} style={styles.statItem}>
-              <Text style={styles.statValue}>{stat.value}</Text>
-              <Text style={styles.statLabel}>{stat.label}</Text>
-            </View>
-          ))}
-        </View>
-
-        <View style={styles.menuSection}>
-          <Text style={styles.sectionTitle}>Account</Text>
-          {menuItems.map((item, index) => (
-            <TouchableOpacity key={index} style={styles.menuItem}>
-              <View
-                style={[
-                  styles.menuIcon,
-                  { backgroundColor: `${item.color}15` },
-                ]}
-              >
-                <Ionicons
-                  name={item.icon as any}
-                  size={24}
-                  color={item.color}
-                />
-              </View>
-              <Text style={styles.menuLabel}>{item.label}</Text>
-              <Ionicons name="chevron-forward" size={20} color="#D1D5DB" />
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Ionicons name="log-out" size={24} color="#EF4444" />
-          <Text style={styles.logoutText}>Log Out</Text>
-        </TouchableOpacity>
-
-        <Text style={styles.version}>Version 1.0.0</Text>
-      </View>
+      </LinearGradient>
     </ScrollView>
   );
 }
@@ -99,7 +161,7 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: "#1C58F2",
     paddingTop: 40,
   },
   content: {
@@ -165,6 +227,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#6B7280",
   },
+  container1: {},
   menuSection: {
     backgroundColor: "white",
     borderRadius: 16,

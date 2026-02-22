@@ -10,17 +10,21 @@ export const fetchProfile = createAsyncThunk(
     } catch (error: any) {
       return rejectWithValue(error.response?.data);
     }
-  }
+  },
 );
 
 interface AuthState {
   user: any | null;
+  wallet: any | null;
+  quizStats: any | null;
   isAuthenticated: boolean;
   loading: boolean;
 }
 
 const initialState: AuthState = {
   user: null,
+  wallet: null,
+  quizStats: null,
   isAuthenticated: false,
   loading: false,
 };
@@ -45,7 +49,12 @@ const authSlice = createSlice({
         state.loading = true;
       })
       .addCase(fetchProfile.fulfilled, (state, action) => {
-        state.user = action.payload;
+        state.user = action.payload.user;
+        state.wallet = action.payload.wallet;
+        state.quizStats = action.payload.quiz_stats;
+        state.isAuthenticated = true;
+        state.loading = false;
+
         state.isAuthenticated = true;
         state.loading = false;
       })

@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View } from "react-native";
+import { images } from "@/constants/images";
+import { Image, StyleSheet, Text, View } from "react-native";
 
 interface BalanceCardProps {
   totalBalance: number;
@@ -13,8 +14,22 @@ export default function BalanceCard({
 }: BalanceCardProps) {
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Total Balance</Text>
-      <Text style={styles.balance}>${totalBalance.toFixed(2)}</Text>
+      <View style={styles.content}>
+        {/* LEFT SIDE */}
+        <View style={styles.balanceContainer}>
+          <Text style={styles.label}>Total Balance</Text>
+          <Text style={styles.balance}>
+            ${Number(totalBalance ?? 0).toFixed(2)}
+          </Text>
+        </View>
+
+        {/* RIGHT SIDE */}
+        <Image
+          source={images.botlookphone}
+          style={styles.botImage}
+          resizeMode="contain"
+        />
+      </View>
 
       <View style={styles.statsRow}>
         <View style={styles.statItem}>
@@ -37,27 +52,18 @@ export default function BalanceCard({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#6366F1",
+    backgroundColor: "#0db8e8",
     borderRadius: 16,
     padding: 20,
     marginBottom: 24,
   },
-  label: {
-    fontSize: 14,
-    color: "rgba(255, 255, 255, 0.8)",
-    marginBottom: 8,
-  },
-  balance: {
-    fontSize: 36,
-    fontWeight: "bold",
-    color: "white",
-    marginBottom: 24,
-  },
+
   statsRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
+
   statItem: {
     flex: 1,
   },
@@ -76,5 +82,34 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "600",
     color: "white",
+  },
+  content: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "100%",
+  },
+
+  balanceContainer: {
+    flex: 1,
+  },
+
+  label: {
+    fontSize: 14,
+    color: "#111827",
+  },
+
+  balance: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#111827",
+    marginTop: 4,
+  },
+
+  botImage: {
+    width: 80,
+    height: 80,
+    marginLeft: 10,
+    flex: 2,
   },
 });

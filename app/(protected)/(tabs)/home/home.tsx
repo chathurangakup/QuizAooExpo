@@ -1,8 +1,10 @@
 import { RootState } from "@/app/store/rootReducer";
 import { fetchQuizzes } from "@/app/store/task/task.thunks";
 import SearchBar from "@/components/home/SearchBar";
-import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { images } from "@/constants/images";
+import { LinearGradient } from "expo-linear-gradient"; // Ensure this is imported
+import { router, useFocusEffect } from "expo-router";
+import { useCallback, useState } from "react";
 import {
   FlatList,
   Image,
@@ -28,13 +30,14 @@ export default function HomeScreen() {
     "EASY" | "MEDIUM" | "HARD"
   >("EASY");
 
-  useEffect(() => {
-    dispatch(fetchQuizzes("EASY"));
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      dispatch(fetchQuizzes("EASY"));
+    }, []),
+  );
 
   // console.log("Selected Difficulty:", tasks);
 
-  // console.log("Tasks:", tasks);
   function DifficultyButton({
     label,
     value,
@@ -46,15 +49,30 @@ export default function HomeScreen() {
 
     return (
       <TouchableOpacity
-        style={[styles.levelButton, isActive && styles.activeLevelButton]}
+        activeOpacity={0.8}
         onPress={() => {
           setSelectedDifficulty(value);
           dispatch(fetchQuizzes(value));
         }}
+        // The outer view provides the "base" shadow
+        style={[
+          styles.bubbleContainer,
+          isActive && styles.activeBubbleContainer,
+        ]}
       >
-        <Text style={[styles.levelText, isActive && styles.activeLevelText]}>
-          {label}
-        </Text>
+        <LinearGradient
+          // These colors create the "curved" surface look
+          colors={
+            isActive
+              ? ["#4A80FF", "#1C58F2"] // Active: Darker blue gradient
+              : ["#FFFFFF", "#E6EEFF"] // Inactive: White to light blue-grey
+          }
+          style={styles.bubbleGradient}
+        >
+          <Text style={[styles.levelText, isActive && styles.activeLevelText]}>
+            {label}
+          </Text>
+        </LinearGradient>
       </TouchableOpacity>
     );
   }
@@ -93,37 +111,76 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      {/* 🔵 Blue Header */}
-      <View style={styles.header}>
-        <View style={styles.row}>
-          <Text style={styles.hello}>Hello </Text>
-          <Text style={styles.hello}>{user?.user.name ?? "User"} 👋</Text>
+      <LinearGradient
+        colors={["#1C58F2", "#6495ED", "#FFFFFF"]} // Blue -> Light Blue -> White
+        style={styles.container1}
+      >
+        {/* 🔵 Header Content */}
+        <View style={styles.header}>
+          <View style={styles.row}>
+            <Text style={styles.hello}>Hello </Text>
+            <Text style={styles.hello}>{user?.name ?? "User"} 👋</Text>
+          </View>
+          <Text style={styles.subtitle}>Let’s test your knowledge</Text>
+          <View
+            style={{
+              justifyContent: "center",
+              alignItems: "center",
+              flexDirection: "row",
+            }}
+          >
+            <View
+              style={{
+                justifyContent: "center",
+                alignItems: "center",
+                flex: 1,
+              }}
+            >
+              <Image
+                source={images.splash}
+                style={styles.loginImage}
+                resizeMode="contain"
+              />
+            </View>
+            <View
+              style={{
+                justifyContent: "center",
+                alignItems: "center",
+                flex: 2,
+              }}
+            >
+              <SearchBar />
+            </View>
+          </View>
         </View>
-        <Text style={styles.subtitle}>Let’s test your knowledge</Text>
-        <SearchBar />
-      </View>
+      </LinearGradient>
 
       {/* ⚪ White Layer */}
       <View style={styles.whiteLayer}>
-        <View style={styles.buttonRow}>
-          {difficulties.map((level) => (
-            <DifficultyButton
-              key={level.value}
-              label={level.label}
-              value={level.value}
-            />
-          ))}
-        </View>
+        <LinearGradient
+          colors={["#8eabf5", "#6495ED", "#FFFFFF"]} // Blue -> Light Blue -> White
+          style={styles.whiteLayer1}
+        >
+          <View style={styles.buttonRow}>
+            {difficulties.map((level) => (
+              <DifficultyButton
+                key={level.value}
+                label={level.label}
+                value={level.value}
+              />
+            ))}
+          </View>
 
-        <FlatList
-          data={tasks}
-          keyExtractor={(item) => item.id}
-          numColumns={2}
-          columnWrapperStyle={styles.column}
-          renderItem={({ item }) => <QuizCard item={item} />}
-          showsVerticalScrollIndicator={false}
-          refreshing={loading}
-        />
+          <FlatList
+            data={tasks}
+            keyExtractor={(item) => item.id}
+            numColumns={2}
+            columnWrapperStyle={styles.column}
+            renderItem={({ item }) => <QuizCard item={item} />}
+            showsVerticalScrollIndicator={false}
+            refreshing={loading}
+          />
+        </LinearGradient>
       </View>
     </View>
   );
@@ -132,9 +189,8 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#1C58F2",
-    paddingTop: 40,
   },
+  container1: { paddingBottom: 10 },
   cardImage: {
     width: "100%",
     height: 90,
@@ -146,12 +202,15 @@ const styles = StyleSheet.create({
     backgroundColor: "#1C58F2",
   },
 
-  activeLevelText: {
-    color: "#fff",
-  },
+  // activeLevelText: {
+  //   color: "#fff",
+  // },
 
   header: {
-    padding: 20,
+    paddingTop: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    marginTop: 50,
   },
 
   row: {
@@ -172,12 +231,12 @@ const styles = StyleSheet.create({
   },
 
   whiteLayer: {
-    backgroundColor: "#fff",
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    padding: 20,
-    marginTop: 24,
+    flex: 2,
+  },
+  whiteLayer1: {
     flex: 1,
+    borderRadius: 28,
+    padding: 20,
   },
 
   buttonRow: {
@@ -193,10 +252,10 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
 
-  levelText: {
-    fontWeight: "600",
-    color: "#1C58F2",
-  },
+  // levelText: {
+  //   fontWeight: "600",
+  //   color: "#1C58F2",
+  // },
 
   column: {
     justifyContent: "space-between",
@@ -244,6 +303,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  loginImage: {
+    width: 110,
+    height: 110,
+    marginBottom: 16,
+  },
 
   disabledLabel: {
     color: "white",
@@ -253,5 +317,55 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
+  },
+  bubbleContainer: {
+    borderRadius: 25,
+    backgroundColor: "#EEF2FF",
+    // Outer Shadow (The "Lift")
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 5,
+
+    // Bottom border gives an embossed "edge"
+    borderBottomWidth: 3,
+    borderBottomColor: "#D1DBF5",
+    borderRightWidth: 1,
+    borderRightColor: "#D1DBF5",
+  },
+
+  activeBubbleContainer: {
+    borderBottomWidth: 1, // Flattens slightly when "pressed/active"
+    borderBottomColor: "#1648C9",
+    shadowColor: "#1C58F2",
+    shadowOpacity: 0.4,
+  },
+
+  bubbleGradient: {
+    paddingVertical: 10,
+    paddingHorizontal: 22,
+    borderRadius: 25,
+    alignItems: "center",
+    justifyContent: "center",
+    // Light highlight on top to simulate water/glass reflection
+    borderTopWidth: 1.5,
+    borderTopColor: "rgba(255, 255, 255, 0.8)",
+    borderLeftWidth: 1,
+    borderLeftColor: "rgba(255, 255, 255, 0.5)",
+  },
+
+  levelText: {
+    fontWeight: "700",
+    color: "#1C58F2",
+    // Subtle text shadow for depth
+    textShadowColor: "rgba(255, 255, 255, 0.5)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 1,
+  },
+
+  activeLevelText: {
+    color: "#FFFFFF",
+    textShadowColor: "rgba(0, 0, 0, 0.2)",
   },
 });

@@ -10,4 +10,5 @@ export const images = {
   bgsuccess: require("../assets/images/bgsuccess.png"),
   success: require("../assets/images/success.png"),
   profile: require("../assets/images/profile.png"),
+  botlookphone: require("../assets/images/botlookphone.png"),
 };

@@ -12,7 +12,6 @@ export default function SearchBar() {
         style={styles.input}
       />
 
-      <Feather name="arrow-left" size={20} color="#9CA3AF" />
       <Feather name="arrow-right" size={20} color="#9CA3AF" />
     </View>
   );

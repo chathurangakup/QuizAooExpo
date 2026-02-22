@@ -7,6 +7,7 @@ import LottieLoader from "@/components/common/LottieLoader";
 import PrimaryButton from "@/components/common/PrimaryButton";
 import ProgressBar from "@/components/home/ProgressBar";
 import { images } from "@/constants/images";
+import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -92,9 +93,13 @@ export default function QuestionsScreen() {
             answers: updatedAnswers,
           }),
         ).unwrap();
+
         console.log("SUBMISSION RESPONSE", response);
+
         if (response?.message) {
-          setShowSuccessModal(true);
+          setTimeout(() => {
+            setShowSuccessModal(true);
+          }, 2000); // ⏱ 2 seconds delay
         }
       } catch (error) {
         console.error("Submit quiz failed:", error);
@@ -124,92 +129,127 @@ export default function QuestionsScreen() {
           router.replace("/(protected)/(tabs)/home/home");
         }}
       />
+      <LinearGradient
+        colors={["#1C58F2", "#6495ED", "#FFFFFF"]} // Blue -> Light Blue -> White
+        style={styles.container1}
+      >
+        <Header title="Questions" onBack={() => router.back()} hideProgress />
 
-      <Header title="Questions" onBack={() => router.back()} hideProgress />
+        <LottieLoader visible={loading} />
 
-      <LottieLoader visible={loading} />
-
-      <Text style={styles.counter}>
-        Question {currentIndex + 1} of {selectedQuiz.questions.length}
-      </Text>
-
-      <View style={{ justifyContent: "center", alignItems: "center" }}>
-        <Image
-          source={images.loginWrite}
-          style={styles.loginImage}
-          resizeMode="contain"
-        />
-      </View>
-
-      <View style={{ paddingHorizontal: 20, marginTop: 8 }}>
-        <ProgressBar
-          progress={(currentIndex + 1) / selectedQuiz.questions.length}
-          height={12}
-          fillColor="red"
-        />
-      </View>
-
-      <View style={styles.whiteLayer}>
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <Text style={styles.question}>
-            <Text style={styles.questionNumber}>{currentIndex + 1}.</Text>
-            {currentQuestion.question}
+        <View
+          style={{
+            justifyContent: "center",
+            alignItems: "center",
+            flexDirection: "row",
+            paddingHorizontal: 20,
+          }}
+        >
+          <Text style={styles.counter}>
+            Question {currentIndex + 1} of {selectedQuiz.questions.length}
           </Text>
+          <View style={{ justifyContent: "center", alignItems: "center" }}>
+            <Image
+              source={images.loginWrite}
+              style={styles.loginImage}
+              resizeMode="contain"
+            />
+          </View>
+        </View>
 
-          {currentQuestion.options.map((option: any, idx: number) => {
-            const isSelected = selectedOption?.option_id === option.id;
-
-            return (
-              <View
-                style={{ flexDirection: "row", alignItems: "center" }}
-                key={idx}
-              >
-                <Text
-                  style={[
-                    styles.optionIndex,
-                    isSelected && styles.selectedText,
-                  ]}
-                >
-                  {idx + 1}.
-                </Text>
-
-                <TouchableOpacity
-                  style={[styles.option, isSelected && styles.selectedOption]}
-                  onPress={() => handleSelectOption(currentQuestion.id, option)}
-                >
-                  <Text
-                    style={[
-                      styles.optionText,
-                      isSelected && styles.selectedText,
-                    ]}
-                  >
-                    {option}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            );
-          })}
-        </ScrollView>
-
-        <View style={styles.bottomBar}>
-          <TouchableOpacity
-            onPress={handlePrevious}
-            disabled={currentIndex === 0}
-          >
-            <Text style={styles.arrow}>⬅</Text>
-          </TouchableOpacity>
-
-          <PrimaryButton
-            title={isLastQuestion ? "Submit" : "Next"}
-            onPress={handleNext}
-            style={[styles.nextButton, !selectedOption && styles.nextDisabled]}
-            disabled={!selectedOption}
-            variant="secondary"
+        <View style={{ paddingHorizontal: 20, marginTop: 8 }}>
+          <ProgressBar
+            progress={(currentIndex + 1) / selectedQuiz.questions.length}
+            height={12}
           />
+        </View>
+      </LinearGradient>
 
-          <TouchableOpacity onPress={handleNext} disabled={!selectedOption}>
-            <Text style={styles.arrow}>➡</Text>
-          </TouchableOpacity>
+      <View style={styles.whiteLayerMain}>
+        <View style={styles.whiteLayer}>
+          <ScrollView showsVerticalScrollIndicator={false}>
+            <Text style={styles.question}>
+              <Text style={styles.questionNumber}>{currentIndex + 1}.</Text>
+              {currentQuestion.question}
+            </Text>
+
+            {currentQuestion.options.map((option: string, idx: number) => {
+              const isSelected =
+                selectedOption?.option_id === `${currentQuestion.id}_${idx}`;
+
+              return (
+                <TouchableOpacity
+                  key={idx}
+                  style={[
+                    styles.optionRow,
+                    isSelected && styles.selectedOption,
+                  ]}
+                  onPress={() =>
+                    handleSelectOption(
+                      `${currentQuestion.id}_${idx}`, // unique id
+                      option,
+                    )
+                  }
+                >
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      flex: 1,
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.optionIndex,
+                        isSelected && styles.selectedIndex,
+                      ]}
+                    >
+                      {idx + 1}.
+                    </Text>
+
+                    <Text
+                      style={[
+                        styles.optionText,
+                        isSelected && styles.selectedText,
+                      ]}
+                    >
+                      {option}
+                    </Text>
+                  </View>
+
+                  {isSelected && (
+                    <View style={styles.tickCircle}>
+                      <Text style={styles.tick}>✓</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+
+          <View style={styles.bottomBar}>
+            <TouchableOpacity
+              onPress={handlePrevious}
+              disabled={currentIndex === 0}
+            >
+              <Text style={styles.arrow}>⬅</Text>
+            </TouchableOpacity>
+
+            <PrimaryButton
+              title={isLastQuestion ? "Submit" : "Next"}
+              onPress={handleNext}
+              style={[
+                styles.nextButton,
+                !selectedOption && styles.nextDisabled,
+              ]}
+              disabled={!selectedOption}
+              variant="secondary"
+            />
+
+            <TouchableOpacity onPress={handleNext} disabled={!selectedOption}>
+              <Text style={styles.arrow}>➡</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </View>
@@ -233,19 +273,23 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     alignContent: "center",
   },
+  container1: {},
 
   counter: {
-    color: "#fff",
+    color: "#111827",
     paddingLeft: 40,
     marginTop: 8,
     fontWeight: "600",
-    fontSize: 16,
+    fontSize: 20,
   },
-
+  whiteLayerMain: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
   whiteLayer: {
     flex: 1,
     backgroundColor: "#fff",
-    marginTop: 20,
+
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     padding: 20,
@@ -256,6 +300,36 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginBottom: 40,
     color: "#111827",
+  },
+  optionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#F3F4F6",
+    padding: 16,
+    borderRadius: 14,
+    marginBottom: 14,
+    borderWidth: 2,
+    borderColor: "transparent",
+  },
+
+  selectedIndex: {
+    color: "#1C58F2",
+  },
+
+  tickCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "#1C58F2",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  tick: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
   },
 
   option: {

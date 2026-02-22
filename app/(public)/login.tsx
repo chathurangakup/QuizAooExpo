@@ -1,4 +1,3 @@
-import Header from "@/components/common/Header";
 import Input from "@/components/common/Input";
 import PrimaryButton from "@/components/common/PrimaryButton";
 import Checkbox from "expo-checkbox";
@@ -69,7 +68,6 @@ export default function LoginScreen() {
 
   return (
     <ScrollView style={styles.container}>
-      <Header onBack={() => router.back()} hideProgress={true} />
       <View style={styles.topSection}>
         <Image
           source={images.loginWrite}
@@ -245,6 +243,7 @@ const styles = StyleSheet.create({
   topSection: {
     alignItems: "center",
     marginBottom: 24,
+    marginTop: 16,
   },
 
   loginImage: {
